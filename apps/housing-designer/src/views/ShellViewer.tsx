@@ -64,14 +64,12 @@ export default function ShellViewer() {
     const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene)
     const gMat = new BABYLON.StandardMaterial('gMat', scene)
     gMat.diffuseColor = new BABYLON.Color3(0.92, 0.92, 0.94)
-    gMat.wireframe = false
     ground.material = gMat
+    ground.receiveShadows = true
 
     // -- Shadows (ShadowGenerator on directional light) --
     const shadowGen = setupShadows(scene, dir, [])
     shadowGenRef.current = shadowGen
-    // Make ground receive shadows
-    ground.receiveShadows = true
 
     // -- SSAO (screen-space ambient occlusion) --
     setupSSAO(scene, camera)
