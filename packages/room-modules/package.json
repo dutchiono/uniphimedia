@@ -1,12 +1,9 @@
 {
   "name": "@uniphimedia/room-modules",
   "version": "0.0.1",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit"
-  },
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "dependencies": {
     "@uniphimedia/shared-types": "workspace:*"
   },
