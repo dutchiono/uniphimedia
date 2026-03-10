@@ -1,238 +1,171 @@
 export default function CatalogPage() {
-  const featuredResources = [
+  const featured = [
     {
       title: "The One-Straw Revolution",
       author: "Masanobu Fukuoka",
-      desc: "The philosophy and practice of natural farming. A must-read for anyone serious about regenerative agriculture.",
-      link: "#"
+      description: "A radical philosophy of natural farming that inspired the permaculture movement. Learn to work with nature, not against it.",
+      category: "Farming"
     },
     {
       title: "Gaia's Garden",
       author: "Toby Hemenway",
-      desc: "A comprehensive guide to home-scale permaculture. Practical, accessible, and transformative.",
-      link: "#"
+      description: "The definitive guide to home-scale permaculture. Design edible landscapes that sustain themselves and your family.",
+      category: "Farming"
     },
     {
       title: "The Art of Natural Building",
-      author: "Various Contributors",
-      desc: "Design and construction with natural materials. From cob to cordwood, timber frame to earthbag.",
-      link: "#"
+      author: "Joseph F. Kennedy et al.",
+      description: "Comprehensive guide to building with earth, straw, wood, and stone. Beautiful, affordable, and sustainable structures.",
+      category: "Building"
     }
   ];
 
   const categories = [
     {
-      title: "Food & Farming",
-      icon: "🌾",
-      desc: "Permaculture, regenerative ag, food forests, seed saving, livestock management",
-      count: 47
+      name: "Food & Farming",
+      description: "Permaculture, gardening, soil health, seed saving, food preservation",
+      count: "42 resources"
     },
     {
-      title: "Legal & Financial",
-      icon: "⚖️",
-      desc: "Land law, homestead exemptions, tax strategies, alternative currencies",
-      count: 23
+      name: "Legal & Financial",
+      description: "Land ownership, homestead law, off-grid regulations, community structure",
+      count: "28 resources"
     },
     {
-      title: "Health & Wellness",
-      icon: "🌿",
-      desc: "Herbal medicine, natural remedies, mental health, fitness for homesteaders",
-      count: 31
+      name: "Health & Wellness",
+      description: "Herbal medicine, first aid, mental resilience, natural healing",
+      count: "35 resources"
     },
     {
-      title: "Building & Construction",
-      icon: "🔨",
-      desc: "Natural building, off-grid systems, tiny homes, workshop design",
-      count: 38
+      name: "Building & Construction",
+      description: "Natural building, tiny homes, off-grid systems, DIY skills",
+      count: "51 resources"
     },
     {
-      title: "Community & Social",
-      icon: "🤝",
-      desc: "Intentional communities, conflict resolution, governance, mutual aid",
-      count: 19
+      name: "Community & Social",
+      description: "Intentional communities, governance, conflict resolution, mutual aid",
+      count: "22 resources"
     },
     {
-      title: "Preparedness & Security",
-      icon: "🛡️",
-      desc: "Emergency prep, self-defense, food storage, resilience planning",
-      count: 25
+      name: "Preparedness & Security",
+      description: "Emergency prep, self-defense, water storage, resilience planning",
+      count: "38 resources"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-cream">
-      {/* Hero Section */}
+    <main className="min-h-screen bg-cream">
+      {/* Hero */}
       <section className="bg-forest text-cream py-20">
-        <div className="container mx-auto px-6 text-center">
-          <h1 className="font-serif text-5xl md:text-6xl mb-6">
-            The Knowledge They Don't Want You to Find
-          </h1>
-          <p className="text-xl max-w-3xl mx-auto opacity-90">
-            Curated resources for land ownership, self-reliance, and community building.
-          </p>
-        </div>
-      </section>
-
-      {/* Featured Resources */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-6">
-          <h2 className="font-serif text-4xl text-forest text-center mb-12">Featured Resources</h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {featuredResources.map((resource, idx) => (
-              <div key={idx} className="border-2 border-gold rounded-lg p-6 hover:shadow-xl transition-shadow">
-                <h3 className="font-serif text-2xl text-forest mb-2">{resource.title}</h3>
-                <p className="text-bark text-sm mb-4 italic">by {resource.author}</p>
-                <p className="text-bark mb-6">{resource.desc}</p>
-                <a
-                  href={resource.link}
-                  className="inline-block bg-forest text-cream px-6 py-2 rounded font-semibold hover:bg-opacity-90 transition"
-                >
-                  Find It
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Resource Categories */}
-      <section className="py-16">
-        <div className="container mx-auto px-6">
-          <h2 className="font-serif text-4xl text-forest text-center mb-12">Browse by Category</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {categories.map((category, idx) => (
-              <div
-                key={idx}
-                className="bg-white border-2 border-forest rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
-              >
-                <div className="text-5xl mb-4 text-center">{category.icon}</div>
-                <h3 className="font-serif text-2xl text-forest mb-3 text-center">{category.title}</h3>
-                <p className="text-bark text-sm text-center mb-4">{category.desc}</p>
-                <div className="text-center">
-                  <span className="inline-block bg-gold text-white px-4 py-1 rounded text-sm font-bold">
-                    {category.count} Resources
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h1 className="font-serif text-5xl mb-4">The Knowledge They Don't Want You to Find</h1>
+          <p className="text-xl opacity-90">Curated resources for land, freedom, and self-reliance</p>
         </div>
       </section>
 
       {/* Search Bar */}
-      <section className="py-16 bg-gold bg-opacity-10">
-        <div className="container mx-auto px-6">
-          <h2 className="font-serif text-4xl text-forest text-center mb-8">Search the Catalog</h2>
-          <div className="max-w-3xl mx-auto">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Search for books, articles, courses, tools..."
-                className="flex-1 border-2 border-forest rounded px-6 py-4 text-lg"
-              />
-              <button className="bg-forest text-cream px-8 py-4 rounded font-semibold hover:bg-opacity-90 transition">
-                Search
-              </button>
-            </div>
-            <p className="text-bark text-sm text-center mt-4">
-              Search by title, author, topic, or keyword. Members get full access to the catalog.
-            </p>
-          </div>
+      <section className="max-w-4xl mx-auto px-6 py-12">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search for books, articles, guides..."
+            className="w-full border-2 border-forest rounded-lg px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-gold"
+          />
+          <button className="absolute right-3 top-1/2 -translate-y-1/2 bg-gold text-white px-6 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition-colors">
+            Search
+          </button>
         </div>
       </section>
 
-      {/* Submit a Resource */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-6">
-          <h2 className="font-serif text-4xl text-forest text-center mb-12">Submit a Resource</h2>
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-cream border-2 border-forest rounded-lg p-8">
-              <p className="text-bark text-center mb-8">
-                Found something valuable? Share it with the community. We review all submissions.
-              </p>
-              <form className="space-y-6">
-                <div>
-                  <label className="block text-forest font-semibold mb-2">Resource Title *</label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-forest rounded px-4 py-3"
-                    placeholder="Book title, article name, course title..."
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-forest font-semibold mb-2">Author / Creator</label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-forest rounded px-4 py-3"
-                    placeholder="Author name or organization"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-forest font-semibold mb-2">URL / Link</label>
-                  <input
-                    type="url"
-                    className="w-full border-2 border-forest rounded px-4 py-3"
-                    placeholder="https://..."
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-forest font-semibold mb-2">Category *</label>
-                  <select className="w-full border-2 border-forest rounded px-4 py-3" required>
-                    <option value="">Select a category...</option>
-                    <option value="food-farming">Food & Farming</option>
-                    <option value="legal-financial">Legal & Financial</option>
-                    <option value="health-wellness">Health & Wellness</option>
-                    <option value="building-construction">Building & Construction</option>
-                    <option value="community-social">Community & Social</option>
-                    <option value="preparedness-security">Preparedness & Security</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-forest font-semibold mb-2">Description</label>
-                  <textarea
-                    className="w-full border-2 border-forest rounded px-4 py-3 h-32"
-                    placeholder="Why is this resource valuable? What does it cover?"
-                  ></textarea>
-                </div>
-
-                <div className="text-center">
-                  <a
-                    href="/contact"
-                    className="inline-block bg-forest text-cream px-12 py-4 rounded font-semibold text-lg hover:bg-opacity-90 transition"
-                  >
-                    Submit Resource
-                  </a>
-                </div>
-              </form>
+      {/* Featured Resources */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <h2 className="font-serif text-4xl text-forest mb-8 text-center">Featured Resources</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {featured.map((resource, idx) => (
+            <div key={idx} className="bg-white border-2 border-gold rounded-lg p-6 shadow-lg">
+              <div className="bg-gold text-white px-3 py-1 rounded-full text-xs font-semibold inline-block mb-3">
+                {resource.category}
+              </div>
+              <h3 className="font-serif text-2xl text-forest mb-2">{resource.title}</h3>
+              <p className="text-sm text-gray-600 mb-3">by {resource.author}</p>
+              <p className="text-gray-700 mb-4">{resource.description}</p>
+              <a
+                href="#"
+                className="inline-block bg-bark text-white px-4 py-2 rounded text-sm font-semibold hover:bg-opacity-90 transition-colors"
+              >
+                Find It
+              </a>
             </div>
-          </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Resource Categories */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <h2 className="font-serif text-4xl text-forest mb-8 text-center">Browse by Category</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {categories.map((category, idx) => (
+            <div key={idx} className="bg-white border-2 border-forest rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer">
+              <h3 className="font-serif text-2xl text-forest mb-2">{category.name}</h3>
+              <p className="text-gray-700 text-sm mb-3">{category.description}</p>
+              <p className="text-gold font-semibold text-sm">{category.count}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Submit Resource */}
+      <section className="max-w-4xl mx-auto px-6 py-16">
+        <div className="bg-bark text-white rounded-lg p-8">
+          <h2 className="font-serif text-3xl mb-4 text-center">Know a Resource We're Missing?</h2>
+          <p className="text-center mb-6 opacity-90">Help us build the ultimate library for land-based living</p>
+          <form className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold mb-2">Resource Title</label>
+              <input type="text" className="w-full rounded-lg px-4 py-3 text-gray-900" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2">Author / Creator</label>
+              <input type="text" className="w-full rounded-lg px-4 py-3 text-gray-900" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2">URL or Where to Find It</label>
+              <input type="text" className="w-full rounded-lg px-4 py-3 text-gray-900" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2">Category</label>
+              <select className="w-full rounded-lg px-4 py-3 text-gray-900">
+                <option>Food & Farming</option>
+                <option>Legal & Financial</option>
+                <option>Health & Wellness</option>
+                <option>Building & Construction</option>
+                <option>Community & Social</option>
+                <option>Preparedness & Security</option>
+              </select>
+            </div>
+            <a
+              href="/contact"
+              className="block w-full bg-gold text-white text-center py-3 rounded-lg font-bold hover:bg-opacity-90 transition-colors"
+            >
+              Submit Resource
+            </a>
+          </form>
         </div>
       </section>
 
       {/* Newsletter Signup */}
-      <section className="py-16 bg-forest text-cream">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="font-serif text-4xl mb-6">Get New Resources Weekly</h2>
-          <p className="text-xl max-w-2xl mx-auto mb-8">
-            Every week we share new additions to the catalog. Stay sharp, stay informed.
-          </p>
-          <div className="max-w-md mx-auto flex gap-2">
-            <input
-              type="email"
-              placeholder="your.email@example.com"
-              className="flex-1 px-4 py-3 rounded text-bark"
-            />
-            <button className="bg-gold text-white px-6 py-3 rounded font-semibold hover:bg-opacity-90 transition">
-              Subscribe
-            </button>
-          </div>
+      <section className="bg-forest text-cream py-16">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="font-serif text-3xl mb-4">Get New Resources Weekly</h2>
+          <p className="text-lg mb-6 opacity-90">We add new books, guides, and articles every week</p>
+          <a
+            href="/contact"
+            className="inline-block bg-gold text-white px-8 py-4 rounded-lg font-bold hover:bg-opacity-90 transition-colors"
+          >
+            Subscribe to Newsletter
+          </a>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
