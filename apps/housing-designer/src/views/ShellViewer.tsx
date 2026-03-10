@@ -3,7 +3,8 @@ import { useDesignStore } from '../store/useDesignStore'
 import { getRoomModule } from '@uniphimedia/room-modules'
 import * as BABYLON from '@babylonjs/core'
 import '@babylonjs/loaders'
-import { useWalkthroughToggle } from './useWalkthroughToggle'
+import { applyPBRMaterials } from '../renderer/PBRMaterialManager'
+import { setupShadows, addMeshToShadows, setupSSAO } from '../renderer/ShadowManager'
 
 const GRID_TO_M = 0.5  // 1 grid unit = 0.5 meters
 
@@ -19,9 +20,13 @@ export default function ShellViewer() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<BABYLON.Engine | null>(null)
   const sceneRef  = useRef<BABYLON.Scene | null>(null)
+  const cameraRef = useRef<BABYLON.ArcRotateCamera | null>(null)
+  const dirLightRef = useRef<BABYLON.DirectionalLight | null>(null)
+  const shadowGenRef = useRef<BABYLON.ShadowGenerator | null>(null)
   const meshMapRef = useRef<Map<string, BABYLON.Mesh>>(new Map())
   const overlayMapRef = useRef<Map<string, BABYLON.Mesh[]>>(new Map())
-  const orbitCamRef = useRef<BABYLON.ArcRotateCamera | null>(null)
+  // PBR material cache -- avoids recreating duplicate materials
+  const matCacheRef = useRef<Map<string, BABYLON.PBRMetallicRoughnessMaterial>>(new Map())
 
   const {
     rooms, levels, globalMaterials,
@@ -30,9 +35,8 @@ export default function ShellViewer() {
   } = useDesignStore()
 
   const [ready, setReady] = useState(false)
-  const { walkthroughActive, toggleWalkthrough } = useWalkthroughToggle()
 
-  // ── Init Babylon ──────────────────────────────────────────────────────────
+  // -- Init Babylon ------------------------------------------------------------
   useEffect(() => {
     const canvas = canvasRef.current!
     const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true })
@@ -42,13 +46,13 @@ export default function ShellViewer() {
     sceneRef.current = scene
     scene.clearColor = new BABYLON.Color4(0.96, 0.96, 0.97, 1)
 
-    // Orbit camera (default)
+    // Camera
     const camera = new BABYLON.ArcRotateCamera('cam', -Math.PI / 4, Math.PI / 3.5, 40, BABYLON.Vector3.Zero(), scene)
     camera.attachControl(canvas, true)
     camera.lowerRadiusLimit = 5
     camera.upperRadiusLimit = 200
     camera.wheelDeltaPercentage = 0.01
-    orbitCamRef.current = camera
+    cameraRef.current = camera
 
     // Lights
     const hemi = new BABYLON.HemisphericLight('hemi', new BABYLON.Vector3(0, 1, 0), scene)
@@ -57,22 +61,22 @@ export default function ShellViewer() {
     const dir = new BABYLON.DirectionalLight('dir', new BABYLON.Vector3(-1, -2, -1), scene)
     dir.intensity = 0.8
     dir.position = new BABYLON.Vector3(20, 40, 20)
+    dirLightRef.current = dir
 
-    // Ground grid
+    // Ground
     const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene)
     const gMat = new BABYLON.StandardMaterial('gMat', scene)
     gMat.diffuseColor = new BABYLON.Color3(0.92, 0.92, 0.94)
-    gMat.wireframe = false
     ground.material = gMat
+    ground.receiveShadows = true
 
-    // Grid lines overlay
-    const gridMat = new BABYLON.GridMaterial?.('gridMat', scene)
-    if (gridMat) {
-      gridMat.mainColor = new BABYLON.Color3(0.85, 0.85, 0.88)
-      gridMat.lineColor = new BABYLON.Color3(0.75, 0.75, 0.78)
-      gridMat.gridRatio = GRID_TO_M * 2
-      ground.material = gridMat
-    }
+    // Shadow generator -- starts empty; meshes added as rooms are created
+    const shadowGen = setupShadows(scene, dir, [])
+    shadowGenRef.current = shadowGen
+    ground.receiveShadows = true
+
+    // SSAO
+    setupSSAO(scene, camera)
 
     engine.runRenderLoop(() => scene.render())
     window.addEventListener('resize', () => engine.resize())
@@ -84,9 +88,10 @@ export default function ShellViewer() {
     }
   }, [])
 
-  // ── Sync rooms -> meshes ──────────────────────────────────────────────────
+  // -- Sync rooms -> meshes + PBR materials ------------------------------------
   useEffect(() => {
     const scene = sceneRef.current
+    const shadowGen = shadowGenRef.current
     if (!scene || !ready) return
 
     const currentIds = new Set(rooms.map(r => r.id))
@@ -101,6 +106,9 @@ export default function ShellViewer() {
       }
     }
 
+    // Topmost visible level
+    const maxLevel = Math.max(...rooms.map(r => r.level), 0)
+
     for (const room of rooms) {
       const mod = getRoomModule(room.moduleType)
       const level = levels.find(l => l.index === room.level)
@@ -113,16 +121,16 @@ export default function ShellViewer() {
       const w = room.gridW * GRID_TO_M
       const d = room.gridH * GRID_TO_M
       const h = room.dims.z
-
       const wx = room.gridX * GRID_TO_M + w / 2
       const wz = room.gridY * GRID_TO_M + d / 2
       const wy = level.floorHeightMeters + h / 2
+      const isTopLevel = room.level === maxLevel
 
       let mesh = meshMapRef.current.get(room.id)
       if (!mesh) {
         mesh = BABYLON.MeshBuilder.CreateBox(room.id, { width: w, height: h, depth: d }, scene)
-        mesh.checkCollisions = true  // walls block walkthrough camera
         meshMapRef.current.set(room.id, mesh)
+        if (shadowGen) addMeshToShadows(shadowGen, mesh)
       } else {
         mesh.scaling = new BABYLON.Vector3(
           w / (mesh.getBoundingInfo().boundingBox.extendSize.x * 2),
@@ -135,17 +143,16 @@ export default function ShellViewer() {
       mesh.rotation.y = (room.rotation * Math.PI) / 180
       mesh.setEnabled(true)
 
-      let mat = mesh.material as BABYLON.StandardMaterial
-      if (!mat) {
-        mat = new BABYLON.StandardMaterial(`mat-${room.id}`, scene)
-        mesh.material = mat
-      }
-      const hex = mod.color.replace('#', '')
-      const r2 = parseInt(hex.slice(0, 2), 16) / 255
-      const g2 = parseInt(hex.slice(2, 4), 16) / 255
-      const b2 = parseInt(hex.slice(4, 6), 16) / 255
-      mat.diffuseColor = new BABYLON.Color3(r2, g2, b2)
-      mat.alpha = 0.85
+      // Apply PBR MultiMaterial (6 faces)
+      applyPBRMaterials(
+        mesh,
+        room,
+        globalMaterials as Record<string, string>,
+        isTopLevel,
+        rooms,
+        scene,
+        matCacheRef.current,
+      )
 
       // Systems overlay spheres
       const existing = overlayMapRef.current.get(room.id) ?? []
@@ -160,7 +167,6 @@ export default function ShellViewer() {
             level.floorHeightMeters + node.positionLocal.z,
             wz - d / 2 + node.positionLocal.y,
           )
-          s.checkCollisions = false  // overlay spheres never block camera
           const sMat = new BABYLON.StandardMaterial(`smat-${node.id}`, scene)
           const hex2 = (NODE_COLORS[node.kind] ?? '#9CA3AF').replace('#', '')
           sMat.diffuseColor = new BABYLON.Color3(
@@ -175,27 +181,15 @@ export default function ShellViewer() {
       }
       overlayMapRef.current.set(room.id, spheres)
     }
-  }, [rooms, levels, showSystemsOverlay, ready])
+  }, [rooms, levels, globalMaterials, showSystemsOverlay, ready])
 
-  // ── Render ────────────────────────────────────────────────────────────────
   const errorRooms = useDesignStore(s => s.validation?.issues.filter(i => i.severity === 'error').flatMap(i => i.affectedRoomIds) ?? [])
-
-  function handleWalkthroughToggle() {
-    const scene  = sceneRef.current
-    const canvas = canvasRef.current
-    const orbit  = orbitCamRef.current
-    if (!scene || !canvas || !orbit) return
-    toggleWalkthrough(scene, canvas, orbit)
-  }
 
   return (
     <div style={{ display: 'flex', height: '100%', flexDirection: 'column', fontFamily: 'Inter, sans-serif' }}>
-      {/* Toolbar */}
       <div style={{ height: 44, background: '#fff', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px' }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>3D Shell</span>
         <div style={{ width: 1, height: 20, background: '#E5E7EB', margin: '0 4px' }} />
-
-        {/* Level visibility toggles */}
         {levels.map(l => (
           <button
             key={l.index}
@@ -208,10 +202,7 @@ export default function ShellViewer() {
             }}
           >{l.label}</button>
         ))}
-
         <div style={{ flex: 1 }} />
-
-        {/* Systems overlay toggle */}
         <button
           onClick={() => setShowSystemsOverlay(!showSystemsOverlay)}
           style={{
@@ -221,37 +212,11 @@ export default function ShellViewer() {
             fontSize: 12, cursor: 'pointer', fontWeight: showSystemsOverlay ? 600 : 400,
           }}
         >Systems {showSystemsOverlay ? 'ON' : 'OFF'}</button>
-
-        <div style={{ width: 1, height: 20, background: '#E5E7EB', margin: '0 4px' }} />
-
-        {/* Walkthrough toggle */}
-        <button
-          onClick={handleWalkthroughToggle}
-          style={{
-            padding: '3px 12px', borderRadius: 6, border: '1px solid #E5E7EB',
-            background: walkthroughActive ? '#EFF6FF' : '#F9FAFB',
-            color: walkthroughActive ? '#2563EB' : '#6B7280',
-            fontSize: 12, cursor: 'pointer', fontWeight: walkthroughActive ? 600 : 400,
-          }}
-        >{walkthroughActive ? 'Exit Walk' : 'Walk'}</button>
       </div>
 
-      {/* Canvas */}
       <div style={{ flex: 1, position: 'relative' }}>
         <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', outline: 'none' }} />
 
-        {/* Walkthrough hint overlay */}
-        {walkthroughActive && (
-          <div style={{
-            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-            background: 'rgba(0,0,0,0.55)', color: '#fff', borderRadius: 8,
-            padding: '6px 16px', fontSize: 12, pointerEvents: 'none', whiteSpace: 'nowrap',
-          }}>
-            WASD to move  |  Mouse to look  |  Press ESC to exit walkthrough
-          </div>
-        )}
-
-        {/* Systems legend */}
         {showSystemsOverlay && (
           <div style={{
             position: 'absolute', bottom: 16, right: 16,
@@ -269,13 +234,12 @@ export default function ShellViewer() {
           </div>
         )}
 
-        {/* Empty state */}
         {rooms.length === 0 && (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
           }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🏗</div>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>{'\u{1F3D7}'}</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: '#374151' }}>No rooms yet</div>
             <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Add rooms in the Floor Plan view</div>
           </div>
