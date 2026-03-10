@@ -1,0 +1,68 @@
+import type { RoomModule, SnapConnector } from '@uniphimedia/shared-types';
+
+export const bathroom_full: RoomModule = {
+  id: 'bathroom_full',
+  name: 'Full Bathroom',
+  category: 'bathroom',
+  variant: 'full',
+  dimensions: { width: 2.5, depth: 3.0, height: 2.4 },
+  gridSize: { x: 5, y: 6 },
+  connectors: [
+    {
+      id: 'bath_full_north_door',
+      face: 'north',
+      position: 0.3,
+      type: 'door',
+      openingWidth: 0.8,
+      openingHeight: 2.1,
+      systems: ['electrical-120v', 'hvac-supply', 'plumbing-vent'],
+      required: true,
+    },
+    { id: 'bath_full_south', face: 'south', position: 0.5, type: 'wall', systems: ['plumbing-drain', 'plumbing-supply'], required: false },
+    { id: 'bath_full_east',  face: 'east',  position: 0.5, type: 'wall', systems: ['plumbing-supply'], required: false },
+    { id: 'bath_full_west',  face: 'west',  position: 0.5, type: 'wall', systems: ['plumbing-supply'], required: false },
+    { id: 'bath_full_floor', face: 'floor', position: 0.5, type: 'open', systems: ['plumbing-drain', 'structural'], required: false },
+    { id: 'bath_full_ceil',  face: 'ceiling', position: 0.5, type: 'open', systems: ['hvac-supply', 'plumbing-vent', 'electrical-120v'], required: false },
+  ],
+  systemsNodes: [
+    { id: 'bath_full_toilet',  type: 'plumbing-fixture', localPosition: { x: 0.15, y: 0.0, z: 0.8 }, channels: ['plumbing-supply', 'plumbing-drain', 'plumbing-vent'], label: 'Toilet', gpm: 1.6 },
+    { id: 'bath_full_sink',    type: 'plumbing-fixture', localPosition: { x: 0.5,  y: 0.0, z: 0.1 }, channels: ['plumbing-supply', 'plumbing-drain'], label: 'Vanity Sink', gpm: 1.2 },
+    { id: 'bath_full_shower',  type: 'plumbing-fixture', localPosition: { x: 0.85, y: 0.0, z: 0.5 }, channels: ['plumbing-supply', 'plumbing-drain'], label: 'Shower/Tub', gpm: 2.0 },
+    { id: 'bath_full_wh',      type: 'water-heater',     localPosition: { x: 0.9,  y: 0.0, z: 0.9 }, channels: ['plumbing-supply', 'electrical-240v'], label: 'Water Heater', watts: 4500 },
+    { id: 'bath_full_fan',     type: 'hvac-register',    localPosition: { x: 0.5,  y: 0.98, z: 0.5 }, channels: ['hvac-supply', 'hvac-return'], label: 'Exhaust Fan', cfm: 50 },
+    { id: 'bath_full_light',   type: 'electrical-fixture', localPosition: { x: 0.5, y: 1.0, z: 0.5 }, channels: ['electrical-120v'], label: 'Vanity Light', watts: 40 },
+    { id: 'bath_full_gfci',    type: 'electrical-outlet', localPosition: { x: 0.5, y: 0.2, z: 0.1 }, channels: ['electrical-120v'], label: 'GFCI Outlet', watts: 0 },
+  ],
+  planColor: '#e8d8f8',
+  icon: 'bath',
+  minCount: 1,
+  repeatable: true,
+  notes: 'Full bathroom with toilet, vanity, shower/tub. Must connect to plumbing stack.',
+};
+
+export const bathroom_half: RoomModule = {
+  id: 'bathroom_half',
+  name: 'Half Bath / Powder Room',
+  category: 'bathroom',
+  variant: 'half',
+  dimensions: { width: 1.5, depth: 2.0, height: 2.4 },
+  gridSize: { x: 3, y: 4 },
+  connectors: [
+    { id: 'bath_half_north_door', face: 'north', position: 0.5, type: 'door', openingWidth: 0.7, openingHeight: 2.1, systems: ['electrical-120v'], required: true },
+    { id: 'bath_half_south', face: 'south', position: 0.5, type: 'wall', systems: ['plumbing-drain', 'plumbing-supply'], required: false },
+    { id: 'bath_half_east',  face: 'east',  position: 0.5, type: 'wall', systems: [], required: false },
+    { id: 'bath_half_west',  face: 'west',  position: 0.5, type: 'wall', systems: [], required: false },
+    { id: 'bath_half_floor', face: 'floor', position: 0.5, type: 'open', systems: ['plumbing-drain', 'structural'], required: false },
+    { id: 'bath_half_ceil',  face: 'ceiling', position: 0.5, type: 'open', systems: ['hvac-supply', 'electrical-120v'], required: false },
+  ],
+  systemsNodes: [
+    { id: 'bath_half_toilet', type: 'plumbing-fixture', localPosition: { x: 0.5, y: 0.0, z: 0.75 }, channels: ['plumbing-supply', 'plumbing-drain', 'plumbing-vent'], label: 'Toilet', gpm: 1.6 },
+    { id: 'bath_half_sink',   type: 'plumbing-fixture', localPosition: { x: 0.5, y: 0.0, z: 0.2  }, channels: ['plumbing-supply', 'plumbing-drain'], label: 'Pedestal Sink', gpm: 1.2 },
+    { id: 'bath_half_light',  type: 'electrical-fixture', localPosition: { x: 0.5, y: 1.0, z: 0.5 }, channels: ['electrical-120v'], label: 'Ceiling Light', watts: 30 },
+  ],
+  planColor: '#f0e8f8',
+  icon: 'bath-half',
+  minCount: 0,
+  repeatable: true,
+  notes: 'Half bath / powder room. Toilet and sink only.',
+};
