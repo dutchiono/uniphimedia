@@ -1,0 +1,1 @@
+export { ROOM_REGISTRY, getRoomModule } from './registry'
