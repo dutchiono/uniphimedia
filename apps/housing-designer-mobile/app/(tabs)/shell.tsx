@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
 import { ExpoWebGLRenderingContext, GLView } from 'expo-gl'
 import { Renderer } from 'expo-three'
@@ -6,15 +6,8 @@ import * as THREE from 'three'
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useDesignStore } from '../../store/useDesignStore'
 import { getRoomModule } from '@uniphimedia/room-modules'
-import {
-  createWalkthroughState,
-  enterWalkthroughMobile,
-  exitWalkthroughMobile,
-  applyWalkthroughOrientation,
-  onWalkthroughTouchStart,
-  onWalkthroughTouchMove,
-  WalkthroughState,
-} from './WalkthroughCamera.mobile'
+import { applyPBRMaterials, addUV2 } from '../../src/renderer/PBRMaterialManager'
+import { enableShadows, addMeshToShadows } from '../../src/renderer/ShadowManager'
 
 const GRID_TO_M = 0.5
 
@@ -26,52 +19,28 @@ const NODE_COLORS: Record<string, number> = {
 }
 
 export default function ShellScreen() {
-  const { rooms, levels, showSystemsOverlay, setShowSystemsOverlay, setLevelVisibility } = useDesignStore()
+  const { rooms, levels, globalMaterials, showSystemsOverlay, setShowSystemsOverlay, setLevelVisibility } = useDesignStore()
   const rendererRef = useRef<Renderer | null>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
+  const dirLightRef = useRef<THREE.DirectionalLight | null>(null)
   const meshMapRef = useRef<Map<string, THREE.Mesh>>(new Map())
   const nodeMapRef = useRef<Map<string, THREE.Mesh[]>>(new Map())
   const glRef = useRef<ExpoWebGLRenderingContext | null>(null)
+  // PBR material cache -- persists across renders
+  const matCacheRef = useRef<Map<string, THREE.MeshStandardMaterial>>(new Map())
 
   // Orbit state
   const orbitRef = useRef({ theta: -0.6, phi: 1.0, radius: 35 })
 
-  // Walkthrough state
-  const [walkthroughActive, setWalkthroughActive] = useState(false)
-  const walkthroughStateRef = useRef<WalkthroughState>(createWalkthroughState())
-
-  // ── Gestures ──────────────────────────────────────────────────────────────
-  // Orbit pan/pinch (active when NOT in walkthrough)
   const pan = Gesture.Pan().onUpdate((e) => {
-    if (walkthroughStateRef.current.active) return
     orbitRef.current.theta -= e.velocityX * 0.001
     orbitRef.current.phi = Math.max(0.2, Math.min(Math.PI / 2 - 0.05, orbitRef.current.phi - e.velocityY * 0.001))
   })
   const pinch = Gesture.Pinch().onUpdate((e) => {
-    if (walkthroughStateRef.current.active) return
     orbitRef.current.radius = Math.max(8, Math.min(120, orbitRef.current.radius / e.scale))
   })
-
-  // Walkthrough touch gestures (handled via raw touch events in GL view)
-  const walkthroughPan = Gesture.Pan()
-    .onBegin((e) => {
-      if (!walkthroughStateRef.current.active) return
-      onWalkthroughTouchStart(walkthroughStateRef.current, [{ clientX: e.x, clientY: e.y }])
-    })
-    .onUpdate((e) => {
-      if (!walkthroughStateRef.current.active || !cameraRef.current) return
-      const touchCount = e.numberOfPointers
-      const fakeTouch = [{ clientX: e.x, clientY: e.y }]
-      if (touchCount >= 2) {
-        // treat as two-finger walk
-        onWalkthroughTouchMove(walkthroughStateRef.current, cameraRef.current, [fakeTouch[0], fakeTouch[0]])
-      } else {
-        onWalkthroughTouchMove(walkthroughStateRef.current, cameraRef.current, fakeTouch)
-      }
-    })
-
-  const composed = Gesture.Simultaneous(pan, pinch, walkthroughPan)
+  const composed = Gesture.Simultaneous(pan, pinch)
 
   function onContextCreate(gl: ExpoWebGLRenderingContext) {
     glRef.current = gl
@@ -93,64 +62,44 @@ export default function ShellScreen() {
     const dir = new THREE.DirectionalLight(0xFFFFFF, 0.8)
     dir.position.set(20, 40, 20)
     scene.add(dir)
+    dirLightRef.current = dir
+
+    // Enable PCFSoft shadow maps on renderer + directional light
+    enableShadows(renderer, dir, [])
 
     // Ground
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(80, 80),
-      new THREE.MeshLambertMaterial({ color: 0xEBEBEE })
+      new THREE.MeshStandardMaterial({ color: 0xEBEBEE, roughness: 0.9, metalness: 0 })
     )
     ground.rotation.x = -Math.PI / 2
     ground.position.y = -0.01
+    ground.receiveShadow = true
     scene.add(ground)
 
     // Grid helper
-    const grid = new THREE.GridHelper(80, 160, 0xCCCCCC, 0xDDDDDD)
-    scene.add(grid)
+    scene.add(new THREE.GridHelper(80, 160, 0xCCCCCC, 0xDDDDDD))
 
     const render = () => {
       requestAnimationFrame(render)
-      const ws = walkthroughStateRef.current
-      if (ws.active && camera) {
-        // Walkthrough: apply yaw/pitch orientation, lock Y
-        applyWalkthroughOrientation(camera, ws)
-      } else {
-        // Orbit mode
-        const { theta, phi, radius } = orbitRef.current
-        camera.position.set(
-          radius * Math.sin(phi) * Math.cos(theta),
-          radius * Math.cos(phi),
-          radius * Math.sin(phi) * Math.sin(theta),
-        )
-        camera.lookAt(10, 0, 10)
-      }
+      const { theta, phi, radius } = orbitRef.current
+      camera.position.set(
+        radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta),
+      )
+      camera.lookAt(10, 0, 10)
       renderer.render(scene, camera)
       gl.endFrameEXP()
     }
     render()
   }
 
-  // ── Toggle walkthrough ────────────────────────────────────────────────────
-  function handleWalkthroughToggle() {
-    const camera = cameraRef.current
-    if (!camera) return
-    const ws = walkthroughStateRef.current
-    if (!ws.active) {
-      enterWalkthroughMobile(camera, ws, 10, 10)
-      setWalkthroughActive(true)
-    } else {
-      exitWalkthroughMobile(
-        camera, ws,
-        orbitRef.current.radius,
-        orbitRef.current.theta,
-        orbitRef.current.phi,
-      )
-      setWalkthroughActive(false)
-    }
-  }
-
-  // ── Sync rooms ───────────────────────────────────────────────────────────
+  // Sync rooms -- re-runs when rooms, levels, globalMaterials, or overlay changes
   useEffect(() => {
     const scene = sceneRef.current
+    const renderer = rendererRef.current
+    const dirLight = dirLightRef.current
     if (!scene) return
 
     const currentIds = new Set(rooms.map(r => r.id))
@@ -163,13 +112,14 @@ export default function ShellScreen() {
       }
     }
 
+    const maxLevel = Math.max(...rooms.map(r => r.level), 0)
+
     for (const room of rooms) {
-      const mod = getRoomModule(room.moduleType)
       const level = levels.find(l => l.index === room.level)
       if (!level?.visible) {
         const m = meshMapRef.current.get(room.id)
         if (m) m.visible = false
-        nodeMapRef.current.get(room.id)?.forEach(n => n.visible = false)
+        nodeMapRef.current.get(room.id)?.forEach(n => { n.visible = false })
         continue
       }
 
@@ -179,22 +129,49 @@ export default function ShellScreen() {
       const wx = room.gridX * GRID_TO_M + w / 2
       const wz = room.gridY * GRID_TO_M + d / 2
       const wy = level.floorHeightMeters + h / 2
+      const isTopLevel = room.level === maxLevel
 
       let mesh = meshMapRef.current.get(room.id)
       if (!mesh) {
-        const hex = parseInt(mod.color.replace('#', ''), 16)
-        mesh = new THREE.Mesh(
-          new THREE.BoxGeometry(w, h, d),
-          new THREE.MeshLambertMaterial({ color: hex, transparent: true, opacity: 0.82 })
-        )
+        const geo = new THREE.BoxGeometry(w, h, d)
+        addUV2(geo)
+        mesh = new THREE.Mesh(geo, [])
         scene.add(mesh)
         meshMapRef.current.set(room.id, mesh)
+        addMeshToShadows(mesh)
       }
+
       mesh.position.set(wx, wy, wz)
       mesh.rotation.y = (room.rotation * Math.PI) / 180
       mesh.visible = true
 
-      // Systems nodes
+      // Apply 6 MeshStandardMaterials (one per BoxGeometry face group)
+      applyPBRMaterials(
+        mesh,
+        room,
+        globalMaterials as Record<string, string>,
+        isTopLevel,
+        rooms,
+        matCacheRef.current,
+      )
+    }
+
+    // Re-register all meshes with shadow system after any change
+    if (renderer && dirLight) {
+      enableShadows(renderer, dirLight, [...meshMapRef.current.values()])
+    }
+
+    // Systems overlay nodes
+    for (const room of rooms) {
+      const mod = getRoomModule(room.moduleType)
+      const level = levels.find(l => l.index === room.level)
+      if (!level?.visible) continue
+
+      const w = room.gridW * GRID_TO_M
+      const d = room.gridH * GRID_TO_M
+      const wx = room.gridX * GRID_TO_M + w / 2
+      const wz = room.gridY * GRID_TO_M + d / 2
+
       nodeMapRef.current.get(room.id)?.forEach(m => scene.remove(m))
       const spheres: THREE.Mesh[] = []
       if (showSystemsOverlay) {
@@ -214,63 +191,45 @@ export default function ShellScreen() {
       }
       nodeMapRef.current.set(room.id, spheres)
     }
-  }, [rooms, levels, showSystemsOverlay])
+  }, [rooms, levels, globalMaterials, showSystemsOverlay])
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1, backgroundColor: '#F5F5F7' }}>
-        {/* Toolbar */}
-        <View style={s.toolbar}>
+        <View style={st.toolbar}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, alignItems: 'center' }}>
             {levels.map(l => (
               <TouchableOpacity key={l.index} onPress={() => setLevelVisibility(l.index, !l.visible)}
-                style={[s.levelBtn, l.visible && s.levelBtnActive]}>
-                <Text style={[s.levelBtnText, l.visible && s.levelBtnTextActive]}>{l.label}</Text>
+                style={[st.levelBtn, l.visible && st.levelBtnActive]}>
+                <Text style={[st.levelBtnText, l.visible && st.levelBtnTextActive]}>{l.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
-
           <TouchableOpacity onPress={() => setShowSystemsOverlay(!showSystemsOverlay)}
-            style={[s.sysBtn, showSystemsOverlay && s.sysBtnActive]}>
-            <Text style={[s.sysBtnText, showSystemsOverlay && s.sysBtnTextActive]}>
+            style={[st.sysBtn, showSystemsOverlay && st.sysBtnActive]}>
+            <Text style={[st.sysBtnText, showSystemsOverlay && st.sysBtnTextActive]}>
               Systems {showSystemsOverlay ? 'ON' : 'OFF'}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Walk toggle */}
-          <TouchableOpacity onPress={handleWalkthroughToggle}
-            style={[s.walkBtn, walkthroughActive && s.walkBtnActive]}>
-            <Text style={[s.walkBtnText, walkthroughActive && s.walkBtnTextActive]}>
-              {walkthroughActive ? 'Exit Walk' : 'Walk'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* 3D View */}
         <GestureDetector gesture={composed}>
           <View style={{ flex: 1 }}>
             <GLView style={{ flex: 1 }} onContextCreate={onContextCreate} />
           </View>
         </GestureDetector>
 
-        {/* Walkthrough hint */}
-        {walkthroughActive && (
-          <View style={s.walkthroughHint} pointerEvents="none">
-            <Text style={s.walkthroughHintText}>1 finger = look  |  2 fingers = walk  |  tap Walk to exit</Text>
-          </View>
-        )}
-
         {rooms.length === 0 && (
-          <View style={s.emptyState}>
-            <Text style={{ fontSize: 42 }}>&#x1F3D7;</Text>
-            <Text style={s.emptyTitle}>No rooms yet</Text>
-            <Text style={s.emptySubtitle}>Add rooms in the Floor Plan tab</Text>
+          <View style={st.emptyState}>
+            <Text style={{ fontSize: 42 }}>{'\u{1F3D7}'}</Text>
+            <Text style={st.emptyTitle}>No rooms yet</Text>
+            <Text style={st.emptySubtitle}>Add rooms in the Floor Plan tab</Text>
           </View>
         )}
 
         {showSystemsOverlay && (
-          <View style={s.legend}>
-            <Text style={s.legendTitle}>Systems</Text>
+          <View style={st.legend}>
+            <Text style={st.legendTitle}>Systems</Text>
             {Object.entries(NODE_COLORS).slice(0, 6).map(([kind, color]) => (
               <View key={kind} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
                 <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: `#${color.toString(16).padStart(6, '0')}` }} />
@@ -284,7 +243,7 @@ export default function ShellScreen() {
   )
 }
 
-const s = StyleSheet.create({
+const st = StyleSheet.create({
   toolbar: { flexDirection: 'row', alignItems: 'center', padding: 8, gap: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
   levelBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6, backgroundColor: '#E5E7EB' },
   levelBtnActive: { backgroundColor: '#EFF6FF' },
@@ -294,13 +253,7 @@ const s = StyleSheet.create({
   sysBtnActive: { backgroundColor: '#FFF7ED', borderColor: '#FED7AA' },
   sysBtnText: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
   sysBtnTextActive: { color: '#EA580C', fontWeight: '600' },
-  walkBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
-  walkBtnActive: { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' },
-  walkBtnText: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
-  walkBtnTextActive: { color: '#2563EB', fontWeight: '600' },
-  walkthroughHint: { position: 'absolute', top: 56, left: 0, right: 0, alignItems: 'center' },
-  walkthroughHintText: { backgroundColor: 'rgba(0,0,0,0.52)', color: '#fff', fontSize: 11, paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20, overflow: 'hidden' },
-  emptyState: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' } as any,
+  emptyState: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' } as any,
   emptyTitle: { fontSize: 16, fontWeight: '600', color: '#374151', marginTop: 10 },
   emptySubtitle: { fontSize: 13, color: '#9CA3AF', marginTop: 4 },
   legend: { position: 'absolute', bottom: 16, right: 16, backgroundColor: 'rgba(255,255,255,0.93)', borderRadius: 10, padding: 12, minWidth: 150, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
