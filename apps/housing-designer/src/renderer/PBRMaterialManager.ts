@@ -2,7 +2,7 @@ import * as BABYLON from '@babylonjs/core'
 import { getMaterial } from '@uniphimedia/materials-library'
 import type { PlacedRoom, MaterialSlotKey } from '@uniphimedia/shared-types'
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers ---------------------------------------------------------------------------
 
 function hexToColor3(hex: string): BABYLON.Color3 {
   const h = hex.replace('#', '')
@@ -54,7 +54,7 @@ function makeFallbackMat(
   return mat
 }
 
-// ── Exterior face detection ───────────────────────────────────────────────────
+// -- Exterior face detection -----------------------------------------------------------
 
 export function isExteriorFace(
   room: PlacedRoom,
@@ -101,16 +101,16 @@ export function isExteriorFace(
   }
 }
 
-// ── Slot resolver ─────────────────────────────────────────────────────────────
+// -- Slot resolver ---------------------------------------------------------------------
 
 /**
  * Resolve the correct MaterialSlotKey for a named mesh face.
  *
- * Mesh naming convention produced by buildRoomShellBabylon:
- *   `{roomId}_wall_{n|s|e|w}`  — wall face
- *   `{roomId}_floor`           — floor slab
- *   `{roomId}_roof`            — roof/ceiling slab
- *   `{roomId}_trim_{*}`        — trim pieces
+ * Mesh naming convention (buildRoomShellBabylon):
+ *   `{roomId}_wall_{n|s|e|w}`  -- wall face
+ *   `{roomId}_floor`           -- floor slab
+ *   `{roomId}_roof`            -- roof/ceiling slab
+ *   `{roomId}_trim_{*}`        -- trim pieces
  */
 function slotForMeshName(
   name: string,
@@ -128,18 +128,21 @@ function slotForMeshName(
   return 'interior_wall'
 }
 
-// ── Public API ────────────────────────────────────────────────────────────────
+// -- Public API ------------------------------------------------------------------------
 
 /**
- * Apply PBRMetallicRoughnessMaterial to every mesh in meshMap, resolving the
- * correct catalog entry per surface slot (exterior_siding, roofing, floor,
- * interior_wall, trim).  Materials are cached in matCache so identical catalog
- * IDs reuse the same BABYLON material object.
+ * Apply PBRMetallicRoughnessMaterial to every mesh in the provided array,
+ * resolving the correct catalog entry per surface slot:
+ *   exterior_siding | roofing | floor | interior_wall | trim
+ *
+ * Materials are cached in matCache so identical catalog IDs reuse the same
+ * BABYLON material object. Room-level overrides take priority over global slot
+ * assignments.
  *
  * @param scene       Active Babylon scene
  * @param room        The PlacedRoom this mesh set belongs to
  * @param allRooms    Full room list (needed for exterior-face detection)
- * @param meshes      Array of meshes produced by buildRoomShellBabylon for this room
+ * @param meshes      Array of meshes produced by buildRoomShellBabylon
  * @param globalMats  Map of slot -> catalog matId from the design store
  * @param matCache    Shared PBR material cache (keyed by catalog matId)
  */
@@ -153,7 +156,6 @@ export function applyPBRMaterials(
 ): void {
   for (const mesh of meshes) {
     const slot = slotForMeshName(mesh.name, room, allRooms)
-    // Use room-level override if present, else fall back to global slot assignment
     const matId =
       (room.materialOverrides as Record<string, string> | undefined)?.[slot] ??
       globalMats[slot]
