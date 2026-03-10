@@ -12,100 +12,81 @@ export default function RafflePrizesPage() {
       value: "$3,500",
       winners: 3,
       entry: "$10",
-      odds: "1 in 500"
+      odds: "3 in 5,000"
     },
     {
       name: "1-Year Seed Club Subscription",
       value: "$180",
       winners: 10,
       entry: "$5",
-      odds: "1 in 100"
+      odds: "10 in 10,000"
     },
     {
       name: "Van Life Annual Pass",
       value: "$4,800",
       winners: 2,
       entry: "$15",
-      odds: "1 in 750"
+      odds: "2 in 3,000"
     },
     {
       name: "Signed Goldback Collection",
       value: "$500",
       winners: 5,
       entry: "$10",
-      odds: "1 in 200"
+      odds: "5 in 8,000"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-cream">
-      {/* Hero Section */}
+    <main className="min-h-screen bg-cream">
+      {/* Hero */}
       <section className="bg-forest text-cream py-20">
-        <div className="container mx-auto px-6 text-center">
-          <h1 className="font-serif text-5xl md:text-6xl mb-6">
-            The Prizes Worth Playing For
-          </h1>
-          <p className="text-xl max-w-3xl mx-auto opacity-90">
-            Real prizes. Real value. Real opportunities to win.
-          </p>
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h1 className="font-serif text-5xl mb-4">The Prizes Worth Playing For</h1>
+          <p className="text-xl opacity-90">Real value. Real homes. Real freedom.</p>
         </div>
       </section>
 
-      {/* Prizes Grid */}
-      <section className="py-20">
-        <div className="container mx-auto px-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {prizes.map((prize, idx) => (
-              <div
-                key={idx}
-                className="bg-white border-2 border-forest rounded-lg p-8 hover:shadow-xl transition-shadow"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-serif text-2xl text-forest flex-1">
-                    {prize.name}
-                  </h3>
-                  <div className="bg-gold text-white px-3 py-1 rounded text-sm font-bold ml-4">
-                    {prize.value}
+      {/* Prize Cards */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <div className="space-y-6">
+          {prizes.map((prize, idx) => (
+            <div key={idx} className="bg-white border-2 border-forest p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex-1">
+                  <h2 className="font-serif text-2xl text-forest mb-2">{prize.name}</h2>
+                  <div className="flex flex-wrap gap-3 text-sm">
+                    <span className="bg-gold text-white px-3 py-1 rounded-full font-semibold">
+                      Value: {prize.value}
+                    </span>
+                    <span className="bg-bark text-white px-3 py-1 rounded-full">
+                      {prize.winners} {prize.winners === 1 ? 'Winner' : 'Winners'}
+                    </span>
+                    <span className="bg-forest text-cream px-3 py-1 rounded-full">
+                      Entry: {prize.entry}
+                    </span>
                   </div>
+                  <p className="mt-3 text-gray-600 text-sm">Estimated odds: {prize.odds}</p>
                 </div>
-                
-                <div className="space-y-3 mb-6 text-bark">
-                  <p className="flex justify-between">
-                    <span className="font-semibold">Winners:</span>
-                    <span>{prize.winners}</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span className="font-semibold">Entry Cost:</span>
-                    <span>{prize.entry}</span>
-                  </p>
-                  <p className="flex justify-between">
-                    <span className="font-semibold">Estimated Odds:</span>
-                    <span className="text-sm">{prize.odds}</span>
-                  </p>
-                </div>
-
                 <a
                   href="/raffle"
-                  className="block w-full bg-forest text-cream text-center py-3 rounded font-semibold hover:bg-opacity-90 transition"
+                  className="bg-gold text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-colors whitespace-nowrap"
                 >
-                  Enter to Win
+                  Enter Now
                 </a>
               </div>
-            ))}
-          </div>
-
-          {/* Footer Note */}
-          <div className="mt-16 max-w-4xl mx-auto">
-            <div className="bg-bark bg-opacity-10 border-l-4 border-forest p-6 rounded">
-              <p className="text-bark text-center">
-                <span className="font-semibold">Legal Notice:</span> All prizes are fulfilled by Uni-Phi Media LLC. 
-                Winners will be contacted via email. Odds vary based on total entries. 
-                No purchase necessary. See official rules for details.
-              </p>
             </div>
-          </div>
+          ))}
         </div>
       </section>
-    </div>
+
+      {/* Footer Note */}
+      <section className="bg-bark text-white py-12">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <p className="text-lg">All prizes fulfilled by Uni-Phi Media LLC</p>
+          <p className="text-sm opacity-80 mt-2">No purchase necessary. See official rules for details.</p>
+        </div>
+      </section>
+    </main>
   );
 }
