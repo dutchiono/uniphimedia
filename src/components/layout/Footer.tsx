@@ -1,56 +1,63 @@
-import Link from 'next/link';
+import Link from 'next/link'
 
-const sections = [
+const cols = [
   {
-    title: 'Communities',
+    heading: 'Communities',
     links: [
       { label: 'Hillshire Hollows', href: '/hsh' },
-      { label: 'All Communities', href: '/communities' },
+      { label: 'Communities', href: '/communities' },
+      { label: 'Home Types', href: '/home-types' },
+      { label: 'Tornado Bunkers', href: '/hsh#bunkers' },
+      { label: 'Bitcoin Bundles', href: '/hsh#btc' },
+      { label: '5 Lakes Deposits', href: '/hsh#5lakes' },
+    ],
+  },
+  {
+    heading: 'Membership',
+    links: [
+      { label: 'All Memberships', href: '/membership' },
       { label: 'Workshares', href: '/workshares' },
-      { label: 'Book a Tour', href: '/tours' },
+      { label: 'Benefits', href: '/membership#benefits' },
+      { label: 'Monthly Clubs', href: '/membership#clubs' },
+      { label: 'Leaders Apply', href: '/leaders-apply' },
     ],
   },
   {
-    title: 'Membership',
+    heading: 'Media & Learn',
     links: [
-      { label: 'Membership Tiers', href: '/membership' },
-      { label: 'Workshare Program', href: '/workshares' },
-      { label: 'Raffle & Crowdfunding', href: '/raffle' },
-      { label: 'Apply as Leader', href: '/contact' },
+      { label: 'Media Hub', href: '/media' },
+      { label: 'Farming & Permaculture', href: '/content-media' },
+      { label: 'Food Growing', href: '/food-growing' },
+      { label: 'Home Protection', href: '/protection' },
+      { label: 'Law Resources', href: '/law' },
     ],
   },
   {
-    title: 'Media',
+    heading: 'Company',
     links: [
-      { label: 'Podcasts', href: '/media' },
-      { label: 'Videos', href: '/media' },
-      { label: 'Permaculture Guides', href: '/media' },
-      { label: 'Forum', href: '/forum' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { label: 'About', href: '/about' },
+      { label: 'About Us', href: '/about' },
+      { label: 'Tours', href: '/tours' },
+      { label: 'Raffle', href: '/raffle' },
       { label: 'Contact', href: '/contact' },
-      { label: 'Privacy Policy', href: '/privacy' },
-      { label: 'Terms of Service', href: '/terms' },
+      { label: 'Forum', href: '/forum' },
+      { label: 'Terms of Service', href: '/tos' },
+      { label: 'Privacy Policy', href: '/privacy-policy' },
     ],
   },
-];
+]
 
-export function Footer() {
+export default function Footer() {
   return (
-    <footer className="bg-brand-dark text-white mt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {sections.map(s => (
-            <div key={s.title}>
-              <h3 className="font-heading font-semibold mb-4 text-brand-gold">{s.title}</h3>
+    <footer className="bg-brand-bark text-brand-cream">
+      <div className="container-max section-pad">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          {cols.map(col => (
+            <div key={col.heading}>
+              <h4 className="text-brand-gold font-heading font-semibold text-lg mb-4">{col.heading}</h4>
               <ul className="space-y-2">
-                {s.links.map(l => (
+                {col.links.map(l => (
                   <li key={l.href}>
-                    <Link href={l.href} className="text-sm text-gray-400 hover:text-white transition-colors">
+                    <Link href={l.href} className="text-brand-cream/70 hover:text-brand-gold text-sm transition-colors">
                       {l.label}
                     </Link>
                   </li>
@@ -59,10 +66,11 @@ export function Footer() {
             </div>
           ))}
         </div>
-        <div className="mt-12 pt-8 border-t border-white/10 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} Uni-Phi Media. All rights reserved.
+        <div className="border-t border-brand-stone/40 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-brand-cream/50">
+          <p>&copy; {new Date().getFullYear()} Uni-Phi Media. All rights reserved.</p>
+          <p>Midwest News &amp; Community Building</p>
         </div>
       </div>
     </footer>
-  );
+  )
 }
