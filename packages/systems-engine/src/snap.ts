@@ -1,92 +1,125 @@
-import type { PlacedRoom, Vec2, ConnectorFace } from '@uniphimedia/shared-types';
-import { getRoomModule } from '@uniphimedia/room-modules';
+import type { PlacedRoom, SnapCandidate, SnapResult, ConnectorFace, Vec2 } from '@uniphimedia/shared-types'
+import { getRoomModule } from '@uniphimedia/room-modules'
 
-/** Returns the opposite face for snap matching */
+const GRID_SIZE = 0.5 // meters per grid unit
+const SNAP_THRESHOLD = 1.2 // grid units
+
+/** Returns the opposite face for pairing */
 export function oppositeFace(face: ConnectorFace): ConnectorFace {
-  const map: Record<ConnectorFace, ConnectorFace> = {
-    north: 'south',
-    south: 'north',
-    east: 'west',
-    west: 'east',
-    floor: 'ceiling',
-    ceiling: 'floor',
-  };
-  return map[face];
+  return { north: 'south', south: 'north', east: 'west', west: 'east', floor: 'ceiling', ceiling: 'floor' }[face] as ConnectorFace
 }
 
-/** World-space edge position of a placed room's face (grid units) */
-export function faceEdge(room: PlacedRoom, face: ConnectorFace): number {
-  const mod = getRoomModule(room.moduleId);
-  if (!mod) return 0;
-  const { x, y } = room.gridPosition;
-  const { x: gw, y: gh } = mod.gridSize;
-  // Apply rotation
-  const rot = room.rotation;
-  if (face === 'north') return rot === 0 ? y      : rot === 1 ? x + gw : rot === 2 ? y + gh : x;
-  if (face === 'south') return rot === 0 ? y + gh : rot === 1 ? x      : rot === 2 ? y      : x + gw;
-  if (face === 'east')  return rot === 0 ? x + gw : rot === 1 ? y + gh : rot === 2 ? x      : y;
-  if (face === 'west')  return rot === 0 ? x      : rot === 1 ? y      : rot === 2 ? x + gw : y + gh;
-  return 0;
-}
+/** World position of a connector on a placed room (2D, ignores z) */
+export function connectorWorldPos(room: PlacedRoom, connectorId: string): Vec2 | null {
+  const mod = getRoomModule(room.moduleType)
+  const conn = mod.connectors.find(c => c.id === connectorId)
+  if (!conn) return null
 
-export interface SnapCandidate {
-  fromRoom: PlacedRoom;
-  fromConnectorId: string;
-  toRoom: PlacedRoom;
-  toConnectorId: string;
-  distance: number;
-  compatible: boolean;
-}
+  const x0 = room.gridX * GRID_SIZE
+  const y0 = room.gridY * GRID_SIZE
+  const w = room.gridW * GRID_SIZE
+  const h = room.gridH * GRID_SIZE
 
-/** Euclidean grid-unit distance between two room grid centers */
-export function snapDistance(a: PlacedRoom, b: PlacedRoom): number {
-  const modA = getRoomModule(a.moduleId);
-  const modB = getRoomModule(b.moduleId);
-  if (!modA || !modB) return Infinity;
-  const ax = a.gridPosition.x + modA.gridSize.x / 2;
-  const ay = a.gridPosition.y + modA.gridSize.y / 2;
-  const bx = b.gridPosition.x + modB.gridSize.x / 2;
-  const by = b.gridPosition.y + modB.gridSize.y / 2;
-  return Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2);
-}
-
-/**
- * For every connector pair between two rooms on the same level,
- * return SnapCandidates sorted by proximity.
- */
-export function getSnapCandidates(
-  roomA: PlacedRoom,
-  roomB: PlacedRoom,
-): SnapCandidate[] {
-  if (roomA.level !== roomB.level) return [];
-  const modA = getRoomModule(roomA.moduleId);
-  const modB = getRoomModule(roomB.moduleId);
-  if (!modA || !modB) return [];
-
-  const candidates: SnapCandidate[] = [];
-
-  for (const connA of modA.connectors) {
-    const oppFace = oppositeFace(connA.face);
-    for (const connB of modB.connectors) {
-      if (connB.face !== oppFace) continue;
-      // Check if the faces are actually adjacent (edge distance < 1 grid unit)
-      const edgeA = faceEdge(roomA, connA.face);
-      const edgeB = faceEdge(roomB, connB.face);
-      const dist = Math.abs(edgeA - edgeB);
-      if (dist > 1) continue;
-
-      // Channel compatibility: at least one shared channel
-      const sharedChannels = connA.systems.filter(c => connB.systems.includes(c));
-      candidates.push({
-        fromRoom: roomA,
-        fromConnectorId: connA.id,
-        toRoom: roomB,
-        toConnectorId: connB.id,
-        distance: dist,
-        compatible: sharedChannels.length > 0 || (connA.systems.length === 0 && connB.systems.length === 0),
-      });
-    }
+  // Apply rotation to connector position
+  let fx: number, fy: number
+  const off = conn.offsetFraction
+  switch (conn.face) {
+    case 'north': fx = x0 + off * w; fy = y0; break
+    case 'south': fx = x0 + off * w; fy = y0 + h; break
+    case 'east':  fx = x0 + w;       fy = y0 + off * h; break
+    case 'west':  fx = x0;           fy = y0 + off * h; break
+    default:      fx = x0 + 0.5 * w; fy = y0 + 0.5 * h; break
   }
 
-  return candidates.sort((a, b) => a.distance - b.distance);
+  // Rotate around room center
+  const cx = x0 + w / 2
+  const cy = y0 + h / 2
+  const rad = (room.rotation * Math.PI) / 180
+  const dx = fx - cx, dy = fy - cy
+  return {
+    x: cx + dx * Math.cos(rad) - dy * Math.sin(rad),
+    y: cy + dx * Math.sin(rad) + dy * Math.cos(rad),
+  }
+}
+
+/** Rotated face direction */
+function rotatedFace(face: ConnectorFace, rotation: number): ConnectorFace {
+  const faces: ConnectorFace[] = ['north', 'east', 'south', 'west']
+  const idx = faces.indexOf(face)
+  if (idx === -1) return face // floor/ceiling don't rotate in 2D
+  return faces[(idx + rotation / 90) % 4]
+}
+
+/** Gather all snap candidates from a room */
+export function getRoomCandidates(room: PlacedRoom): SnapCandidate[] {
+  const mod = getRoomModule(room.moduleType)
+  return mod.connectors
+    .filter(c => c.face !== 'floor' && c.face !== 'ceiling')
+    .map(c => {
+      const worldPos = connectorWorldPos(room, c.id)
+      if (!worldPos) return null
+      return {
+        roomId: room.id,
+        connectorId: c.id,
+        worldPos,
+        face: rotatedFace(c.face, room.rotation),
+        kind: c.kind,
+      } as SnapCandidate
+    })
+    .filter(Boolean) as SnapCandidate[]
+}
+
+/** Find best snap between a dragged room and all placed rooms */
+export function findSnap(
+  draggedRoom: PlacedRoom,
+  placedRooms: PlacedRoom[],
+  threshold = SNAP_THRESHOLD
+): SnapResult | null {
+  const dragCandidates = getRoomCandidates(draggedRoom)
+  let best: SnapResult | null = null
+
+  for (const placed of placedRooms) {
+    if (placed.id === draggedRoom.id) continue
+    if (placed.level !== draggedRoom.level) continue
+    const placedCandidates = getRoomCandidates(placed)
+
+    for (const ca of dragCandidates) {
+      for (const cb of placedCandidates) {
+        // Faces must be opposing
+        if (oppositeFace(ca.face) !== cb.face) continue
+        // Kinds must be compatible
+        if (!kindsCompatible(ca.kind, cb.kind)) continue
+
+        const dx = cb.worldPos.x - ca.worldPos.x
+        const dy = cb.worldPos.y - ca.worldPos.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist > threshold) continue
+
+        const score = dist
+        if (!best || score < best.score) {
+          best = {
+            matched: true,
+            candidateA: ca,
+            candidateB: cb,
+            snapDelta: { x: dx, y: dy },
+            score,
+          }
+        }
+      }
+    }
+  }
+  return best
+}
+
+function kindsCompatible(a: string, b: string): boolean {
+  const compatible: Record<string, string[]> = {
+    door: ['door', 'opening'],
+    opening: ['door', 'opening'],
+    window: ['window'],
+    stair: ['stair'],
+    hvac_duct: ['hvac_duct'],
+    plumbing_stack: ['plumbing_stack'],
+    electrical_panel: ['electrical_panel'],
+  }
+  return compatible[a]?.includes(b) ?? false
 }
