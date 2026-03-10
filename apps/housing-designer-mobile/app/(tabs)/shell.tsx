@@ -6,6 +6,15 @@ import * as THREE from 'three'
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useDesignStore } from '../../store/useDesignStore'
 import { getRoomModule } from '@uniphimedia/room-modules'
+import {
+  createWalkthroughState,
+  enterWalkthroughMobile,
+  exitWalkthroughMobile,
+  applyWalkthroughOrientation,
+  onWalkthroughTouchStart,
+  onWalkthroughTouchMove,
+  WalkthroughState,
+} from './WalkthroughCamera.mobile'
 
 const GRID_TO_M = 0.5
 
@@ -28,14 +37,41 @@ export default function ShellScreen() {
   // Orbit state
   const orbitRef = useRef({ theta: -0.6, phi: 1.0, radius: 35 })
 
+  // Walkthrough state
+  const [walkthroughActive, setWalkthroughActive] = useState(false)
+  const walkthroughStateRef = useRef<WalkthroughState>(createWalkthroughState())
+
+  // ── Gestures ──────────────────────────────────────────────────────────────
+  // Orbit pan/pinch (active when NOT in walkthrough)
   const pan = Gesture.Pan().onUpdate((e) => {
+    if (walkthroughStateRef.current.active) return
     orbitRef.current.theta -= e.velocityX * 0.001
     orbitRef.current.phi = Math.max(0.2, Math.min(Math.PI / 2 - 0.05, orbitRef.current.phi - e.velocityY * 0.001))
   })
   const pinch = Gesture.Pinch().onUpdate((e) => {
+    if (walkthroughStateRef.current.active) return
     orbitRef.current.radius = Math.max(8, Math.min(120, orbitRef.current.radius / e.scale))
   })
-  const composed = Gesture.Simultaneous(pan, pinch)
+
+  // Walkthrough touch gestures (handled via raw touch events in GL view)
+  const walkthroughPan = Gesture.Pan()
+    .onBegin((e) => {
+      if (!walkthroughStateRef.current.active) return
+      onWalkthroughTouchStart(walkthroughStateRef.current, [{ clientX: e.x, clientY: e.y }])
+    })
+    .onUpdate((e) => {
+      if (!walkthroughStateRef.current.active || !cameraRef.current) return
+      const touchCount = e.numberOfPointers
+      const fakeTouch = [{ clientX: e.x, clientY: e.y }]
+      if (touchCount >= 2) {
+        // treat as two-finger walk
+        onWalkthroughTouchMove(walkthroughStateRef.current, cameraRef.current, [fakeTouch[0], fakeTouch[0]])
+      } else {
+        onWalkthroughTouchMove(walkthroughStateRef.current, cameraRef.current, fakeTouch)
+      }
+    })
+
+  const composed = Gesture.Simultaneous(pan, pinch, walkthroughPan)
 
   function onContextCreate(gl: ExpoWebGLRenderingContext) {
     glRef.current = gl
@@ -71,23 +107,48 @@ export default function ShellScreen() {
     const grid = new THREE.GridHelper(80, 160, 0xCCCCCC, 0xDDDDDD)
     scene.add(grid)
 
-    let animId: number
     const render = () => {
-      animId = requestAnimationFrame(render)
-      const { theta, phi, radius } = orbitRef.current
-      camera.position.set(
-        radius * Math.sin(phi) * Math.cos(theta),
-        radius * Math.cos(phi),
-        radius * Math.sin(phi) * Math.sin(theta),
-      )
-      camera.lookAt(10, 0, 10)
+      requestAnimationFrame(render)
+      const ws = walkthroughStateRef.current
+      if (ws.active && camera) {
+        // Walkthrough: apply yaw/pitch orientation, lock Y
+        applyWalkthroughOrientation(camera, ws)
+      } else {
+        // Orbit mode
+        const { theta, phi, radius } = orbitRef.current
+        camera.position.set(
+          radius * Math.sin(phi) * Math.cos(theta),
+          radius * Math.cos(phi),
+          radius * Math.sin(phi) * Math.sin(theta),
+        )
+        camera.lookAt(10, 0, 10)
+      }
       renderer.render(scene, camera)
       gl.endFrameEXP()
     }
     render()
   }
 
-  // Sync rooms
+  // ── Toggle walkthrough ────────────────────────────────────────────────────
+  function handleWalkthroughToggle() {
+    const camera = cameraRef.current
+    if (!camera) return
+    const ws = walkthroughStateRef.current
+    if (!ws.active) {
+      enterWalkthroughMobile(camera, ws, 10, 10)
+      setWalkthroughActive(true)
+    } else {
+      exitWalkthroughMobile(
+        camera, ws,
+        orbitRef.current.radius,
+        orbitRef.current.theta,
+        orbitRef.current.phi,
+      )
+      setWalkthroughActive(false)
+    }
+  }
+
+  // ── Sync rooms ───────────────────────────────────────────────────────────
   useEffect(() => {
     const scene = sceneRef.current
     if (!scene) return
@@ -168,10 +229,19 @@ export default function ShellScreen() {
               </TouchableOpacity>
             ))}
           </ScrollView>
+
           <TouchableOpacity onPress={() => setShowSystemsOverlay(!showSystemsOverlay)}
             style={[s.sysBtn, showSystemsOverlay && s.sysBtnActive]}>
             <Text style={[s.sysBtnText, showSystemsOverlay && s.sysBtnTextActive]}>
               Systems {showSystemsOverlay ? 'ON' : 'OFF'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Walk toggle */}
+          <TouchableOpacity onPress={handleWalkthroughToggle}
+            style={[s.walkBtn, walkthroughActive && s.walkBtnActive]}>
+            <Text style={[s.walkBtnText, walkthroughActive && s.walkBtnTextActive]}>
+              {walkthroughActive ? 'Exit Walk' : 'Walk'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -183,9 +253,16 @@ export default function ShellScreen() {
           </View>
         </GestureDetector>
 
+        {/* Walkthrough hint */}
+        {walkthroughActive && (
+          <View style={s.walkthroughHint} pointerEvents="none">
+            <Text style={s.walkthroughHintText}>1 finger = look  |  2 fingers = walk  |  tap Walk to exit</Text>
+          </View>
+        )}
+
         {rooms.length === 0 && (
           <View style={s.emptyState}>
-            <Text style={{ fontSize: 42 }}>🏗</Text>
+            <Text style={{ fontSize: 42 }}>&#x1F3D7;</Text>
             <Text style={s.emptyTitle}>No rooms yet</Text>
             <Text style={s.emptySubtitle}>Add rooms in the Floor Plan tab</Text>
           </View>
@@ -217,6 +294,12 @@ const s = StyleSheet.create({
   sysBtnActive: { backgroundColor: '#FFF7ED', borderColor: '#FED7AA' },
   sysBtnText: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
   sysBtnTextActive: { color: '#EA580C', fontWeight: '600' },
+  walkBtn: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB' },
+  walkBtnActive: { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' },
+  walkBtnText: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
+  walkBtnTextActive: { color: '#2563EB', fontWeight: '600' },
+  walkthroughHint: { position: 'absolute', top: 56, left: 0, right: 0, alignItems: 'center' },
+  walkthroughHintText: { backgroundColor: 'rgba(0,0,0,0.52)', color: '#fff', fontSize: 11, paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20, overflow: 'hidden' },
   emptyState: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' } as any,
   emptyTitle: { fontSize: 16, fontWeight: '600', color: '#374151', marginTop: 10 },
   emptySubtitle: { fontSize: 13, color: '#9CA3AF', marginTop: 4 },
