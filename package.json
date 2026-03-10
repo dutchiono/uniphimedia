@@ -2,19 +2,25 @@
   "name": "uniphimedia",
   "private": true,
   "version": "0.0.1",
-  "engines": {
-    "node": ">=20",
-    "pnpm": ">=9"
-  },
+  "engines": { "node": ">=20", "pnpm": ">=9" },
   "scripts": {
     "dev": "pnpm --filter @uniphimedia/housing-designer dev",
+    "dev:web": "pnpm --filter @uniphimedia/housing-designer dev",
+    "dev:mobile": "pnpm --filter @uniphimedia/housing-designer-mobile start",
+    "dev:mobile:ios": "pnpm --filter @uniphimedia/housing-designer-mobile ios",
+    "dev:mobile:android": "pnpm --filter @uniphimedia/housing-designer-mobile android",
     "build": "pnpm -r build",
+    "build:web": "pnpm --filter @uniphimedia/housing-designer build",
+    "build:mobile:ios": "pnpm --filter @uniphimedia/housing-designer-mobile build:ios",
+    "build:mobile:android": "pnpm --filter @uniphimedia/housing-designer-mobile build:android",
+    "typecheck": "pnpm -r typecheck",
+    "typecheck:all": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "test": "pnpm -r test",
+    "test:all": "pnpm -r test",
+    "clean": "pnpm -r --parallel exec rm -rf node_modules dist .expo"
   },
   "devDependencies": {
-    "typescript": "^5.4.0",
-    "prettier": "^3.2.0",
-    "eslint": "^9.0.0"
+    "typescript": "^5.4.0"
   }
 }
