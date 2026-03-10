@@ -1,21 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading);
+  body {
+    @apply bg-brand-cream text-brand-bark font-body;
+  }
+  h1, h2, h3, h4 {
+    @apply font-heading;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-brand-green text-white px-6 py-3 rounded-lg font-semibold hover:bg-brand-green/90 transition-colors;
+    @apply inline-block bg-brand-green text-white px-6 py-3 rounded-md font-semibold hover:bg-brand-lime transition-colors duration-200;
   }
-  .btn-secondary {
-    @apply bg-brand-gold text-brand-dark px-6 py-3 rounded-lg font-semibold hover:bg-brand-gold/90 transition-colors;
+  .btn-gold {
+    @apply inline-block bg-brand-gold text-brand-bark px-6 py-3 rounded-md font-semibold hover:bg-brand-amber transition-colors duration-200;
   }
-  .section {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16;
+  .btn-outline {
+    @apply inline-block border-2 border-brand-green text-brand-green px-6 py-3 rounded-md font-semibold hover:bg-brand-green hover:text-white transition-colors duration-200;
+  }
+  .section-pad {
+    @apply px-4 py-16 md:px-8 lg:px-16;
+  }
+  .container-max {
+    @apply max-w-7xl mx-auto;
   }
 }
