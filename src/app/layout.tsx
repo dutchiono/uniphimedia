@@ -1,26 +1,21 @@
-import type { Metadata } from 'next';
-import { Inter, Playfair_Display } from 'next/font/google';
-import './globals.css';
-import { Nav } from '@/components/layout/Nav';
-import { Footer } from '@/components/layout/Footer';
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-body' });
-const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-heading' });
+import type { Metadata } from 'next'
+import './globals.css'
+import Nav from '@/components/layout/Nav'
+import Footer from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
-  title: { default: 'Uni-Phi Media', template: '%s | Uni-Phi Media' },
-  description: 'Midwest community building, permaculture farmsteads, and self-sustaining living. Join Hillshire Hollows and reignite the American dream.',
-  metadataBase: new URL('https://www.uniphimedia.com'),
-};
+  title: 'Uni-Phi Media | Midwest News & Community Building',
+  description: 'Unbiased, unscripted Midwest news. Intentional communities, permaculture farmsteads, membership programs, and media that matters.',
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
-      <body className="bg-brand-cream text-brand-dark font-body antialiased">
+    <html lang="en">
+      <body>
         <Nav />
         <main>{children}</main>
         <Footer />
       </body>
     </html>
-  );
+  )
 }
