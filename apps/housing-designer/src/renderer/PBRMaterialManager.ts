@@ -2,7 +2,7 @@ import * as BABYLON from '@babylonjs/core'
 import { getMaterial } from '@uniphimedia/materials-library'
 import type { PlacedRoom, MaterialSlotKey } from '@uniphimedia/shared-types'
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function hexToColor3(hex: string): BABYLON.Color3 {
   const h = hex.replace('#', '')
@@ -54,7 +54,7 @@ function makeFallbackMat(
   return mat
 }
 
-// ── Exterior face detection ────────────────────────────────────────────────
+// ── Exterior face detection ───────────────────────────────────────────────────
 
 export function isExteriorFace(
   room: PlacedRoom,
@@ -101,66 +101,73 @@ export function isExteriorFace(
   }
 }
 
-// ── Main export ────────────────────────────────────────────────────────────
+// ── Slot resolver ─────────────────────────────────────────────────────────────
 
 /**
- * Apply a Babylon.js MultiMaterial of 6 PBRMetallicRoughnessMaterials
- * (one per box face) to the given room mesh.
+ * Resolve the correct MaterialSlotKey for a named mesh face.
  *
- * Face order for BABYLON.MeshBuilder.CreateBox:
- *   0: z+  = wall_s   1: z-  = wall_n
- *   2: x+  = wall_e   3: x-  = wall_w
- *   4: top = roof (top-level) | ceiling
- *   5: bottom = floor
+ * Mesh naming convention produced by buildRoomShellBabylon:
+ *   `{roomId}_wall_{n|s|e|w}`  — wall face
+ *   `{roomId}_floor`           — floor slab
+ *   `{roomId}_roof`            — roof/ceiling slab
+ *   `{roomId}_trim_{*}`        — trim pieces
+ */
+function slotForMeshName(
+  name: string,
+  room: PlacedRoom,
+  rooms: PlacedRoom[],
+): MaterialSlotKey {
+  if (name.includes('_roof'))  return 'roofing'
+  if (name.includes('_floor')) return 'floor'
+  if (name.includes('_trim'))  return 'trim'
+  if (name.includes('_wall_')) {
+    const face = name.split('_wall_')[1] as 'n' | 's' | 'e' | 'w'
+    if (isExteriorFace(room, face, rooms)) return 'exterior_siding'
+    return 'interior_wall'
+  }
+  return 'interior_wall'
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/**
+ * Apply PBRMetallicRoughnessMaterial to every mesh in meshMap, resolving the
+ * correct catalog entry per surface slot (exterior_siding, roofing, floor,
+ * interior_wall, trim).  Materials are cached in matCache so identical catalog
+ * IDs reuse the same BABYLON material object.
  *
- * Exterior-facing walls (no adjacent room) use the 'exterior' slot.
+ * @param scene       Active Babylon scene
+ * @param room        The PlacedRoom this mesh set belongs to
+ * @param allRooms    Full room list (needed for exterior-face detection)
+ * @param meshes      Array of meshes produced by buildRoomShellBabylon for this room
+ * @param globalMats  Map of slot -> catalog matId from the design store
+ * @param matCache    Shared PBR material cache (keyed by catalog matId)
  */
 export function applyPBRMaterials(
-  mesh: BABYLON.Mesh,
-  room: PlacedRoom,
-  globalMaterials: Record<string, string>,
-  isTopLevel: boolean,
-  allRooms: PlacedRoom[],
   scene: BABYLON.Scene,
+  room: PlacedRoom,
+  allRooms: PlacedRoom[],
+  meshes: BABYLON.Mesh[],
+  globalMats: Record<MaterialSlotKey, string>,
   matCache: Map<string, BABYLON.PBRMetallicRoughnessMaterial>,
 ): void {
-  // Determine per-face slot, honouring exterior detection
-  const faceSlots: MaterialSlotKey[] = [
-    isExteriorFace(room, 's', allRooms) ? 'exterior' : 'wall_s',  // face 0
-    isExteriorFace(room, 'n', allRooms) ? 'exterior' : 'wall_n',  // face 1
-    isExteriorFace(room, 'e', allRooms) ? 'exterior' : 'wall_e',  // face 2
-    isExteriorFace(room, 'w', allRooms) ? 'exterior' : 'wall_w',  // face 3
-    isTopLevel ? 'roof' : 'ceiling',                               // face 4
-    'floor',                                                       // face 5
-  ]
+  for (const mesh of meshes) {
+    const slot = slotForMeshName(mesh.name, room, allRooms)
+    // Use room-level override if present, else fall back to global slot assignment
+    const matId =
+      (room.materialOverrides as Record<string, string> | undefined)?.[slot] ??
+      globalMats[slot]
 
-  // Dispose previous MultiMaterial if any
-  if (mesh.material && mesh.material instanceof BABYLON.MultiMaterial) {
-    mesh.material.dispose(false, false)
-  }
-
-  const multiMat = new BABYLON.MultiMaterial(`multi-${room.id}`, scene)
-
-  for (const slot of faceSlots) {
-    const matId = (room.materialSlots as Record<string, string>)[slot] ?? globalMaterials[slot]
-    if (matId) {
-      if (!matCache.has(matId)) {
-        matCache.set(matId, makePBRMat(scene, matId))
-      }
-      multiMat.subMaterials.push(matCache.get(matId)!)
-    } else {
-      multiMat.subMaterials.push(makeFallbackMat(scene, slot))
+    if (!matId) {
+      mesh.material = makeFallbackMat(scene, slot)
+      continue
     }
-  }
 
-  mesh.material = multiMat
-  mesh.subMeshes = []
-
-  // Re-create 6 SubMesh entries (one per face) so MultiMaterial works
-  // Babylon CreateBox produces 6 faces x 2 triangles each = 12 tris, 36 indices
-  const totalVertices = mesh.getTotalVertices()
-  const indicesPerFace = 6 // 2 triangles * 3 indices
-  for (let i = 0; i < 6; i++) {
-    new BABYLON.SubMesh(i, 0, totalVertices, i * indicesPerFace, indicesPerFace, mesh)
+    let mat = matCache.get(matId)
+    if (!mat) {
+      mat = makePBRMat(scene, matId)
+      matCache.set(matId, mat)
+    }
+    mesh.material = mat
   }
 }
