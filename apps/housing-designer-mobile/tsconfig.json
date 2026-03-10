@@ -1,0 +1,12 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@uniphimedia/shared-types": ["../../packages/shared-types/src/index.ts"],
+      "@uniphimedia/room-modules": ["../../packages/room-modules/src/index.ts"],
+      "@uniphimedia/systems-engine": ["../../packages/systems-engine/src/index.ts"],
+      "@uniphimedia/materials-library": ["../../packages/materials-library/src/index.ts"]
+    }
+  }
+}
