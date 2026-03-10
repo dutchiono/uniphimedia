@@ -1,195 +1,124 @@
 export default function LawPage() {
-  const ownershipBasics = [
-    {
-      title: "Warranty Deed",
-      desc: "The seller guarantees clear title and will defend against any claims. The gold standard for land purchases."
-    },
-    {
-      title: "Quitclaim Deed",
-      desc: "The seller transfers whatever interest they have, with no guarantees. Common in family transfers or clearing title issues."
-    },
-    {
-      title: "Easements",
-      desc: "Legal rights to use someone else's land for specific purposes (access roads, utilities, water rights). Can be a benefit or a burden."
-    },
-    {
-      title: "Adverse Possession",
-      desc: "In some states, continuous, open, and hostile use of land for a statutory period can lead to ownership. Know your boundaries."
-    }
+  const deedTypes = [
+    { name: "Warranty Deed", description: "Seller guarantees clear title and defends against all claims. The gold standard for land purchases." },
+    { name: "Quitclaim Deed", description: "Seller transfers whatever interest they have, with no guarantees. Common in family transfers or clearing title issues." },
+    { name: "Easements", description: "Rights to use someone else's land for specific purposes (access, utilities, water). Can increase or decrease property value." },
+    { name: "Adverse Possession", description: "Claiming land through continuous, open, and hostile use over time. State-specific rules apply — research carefully." }
   ];
 
   const memberRights = [
-    "Right to use all common areas including gardens, forests, and gathering spaces",
-    "Right to sublease your workshare duties to other members with approval",
-    "Right to exit the community and receive your deposit refund per membership terms",
-    "Right to participate in community governance and decision-making processes",
-    "Right to privacy and peaceful enjoyment of your leased lot or dwelling"
+    "Right to use all common areas (gardens, workshops, gathering spaces)",
+    "Right to sublease your workshare hours to other members",
+    "Right to participate in community decision-making and voting",
+    "Right to exit membership and receive deposit refund per contract terms"
   ];
 
-  const questions = [
-    {
-      q: "Can I build a tiny home without permits?",
-      a: "It depends on county zoning. Some Midwest counties have minimal building codes for structures under 200 sq ft or on wheels. Others require full permitting. We help members navigate local regulations and can connect you with code-friendly counties."
-    },
-    {
-      q: "What's the difference between an HOA and a land trust?",
-      a: "HOAs are corporate entities with strict rules and enforcement. Land trusts are member-governed cooperatives focused on stewardship, not control. Uni-Phi operates as a land trust hybrid—members have autonomy with shared values, not rigid restrictions."
-    },
-    {
-      q: "Do I own the land or lease it?",
-      a: "Community lots are leased through the land trust structure, giving you secure long-term occupancy without traditional ownership burdens. No-com-land parcels are sold via fee-simple deed—you own it outright."
-    },
-    {
-      q: "What are my water rights?",
-      a: "Water rights vary by state. In the Midwest, riparian rights typically allow reasonable use of surface water on your property. Groundwater (well water) is usually yours to use. We provide guidance specific to each property location."
-    },
-    {
-      q: "Can I claim a homestead exemption?",
-      a: "Most Midwest states offer homestead exemptions that protect your primary residence from creditors and reduce property taxes. Requirements vary—typically you must occupy the property as your primary residence."
-    },
-    {
-      q: "What about zoning for agriculture?",
-      a: "Agricultural zoning is generally permissive for farming, livestock, and farm structures. Many counties allow agricultural dwellings with minimal restrictions. We target ag-zoned properties specifically."
-    }
+  const faqs = [
+    { q: "Can I build a tiny home on zoned agricultural land?", a: "Depends on county. Some allow ADUs (accessory dwelling units) or agricultural worker housing. Others require minimum square footage. Always check local codes." },
+    { q: "Do I need a permit to build?", a: "Most counties require permits for permanent structures. Some rural areas have more flexibility for temporary or agricultural buildings. Unpermitted building carries risks — fines, inability to sell, insurance issues." },
+    { q: "Who owns water rights?", a: "In the Midwest, water rights are typically riparian (tied to land adjacent to water) or regulated by state law. Rainwater harvesting is generally legal, but groundwater pumping may require permits." },
+    { q: "Can I claim a homestead exemption?", a: "Most Midwest states offer homestead exemptions that protect some property value from creditors and reduce property taxes. Requirements vary — usually must be your primary residence." },
+    { q: "What's the difference between HOA and land trust?", a: "HOAs are corporate entities that enforce rules and maintain common areas. Land trusts hold legal title to land for the benefit of members, prioritizing stewardship over profit." }
   ];
 
   const resources = [
-    { name: "NOLO", url: "https://www.nolo.com", desc: "Legal guides for property and land law" },
-    { name: "Farm Commons", url: "https://farmcommons.org", desc: "Legal resources for farmers and land stewards" },
-    { name: "Homesteaders of America", url: "https://homesteadersofamerica.com", desc: "Community and education for homesteaders" }
+    { name: "NOLO Law", url: "nolo.com", description: "Plain-English legal guides for property, contracts, and estate planning" },
+    { name: "Farm Commons", url: "farmcommons.org", description: "Legal resources specifically for farmers and land-based businesses" },
+    { name: "Homesteaders of America", url: "homesteadersofamerica.com", description: "Community and legal advocacy for homesteaders" }
   ];
 
   return (
-    <div className="min-h-screen bg-cream">
-      {/* Hero Section */}
+    <main className="min-h-screen bg-cream">
+      {/* Hero */}
       <section className="bg-forest text-cream py-20">
-        <div className="container mx-auto px-6 text-center">
-          <h1 className="font-serif text-5xl md:text-6xl mb-6">
-            Know Your Rights. Protect Your Land.
-          </h1>
-          <p className="text-xl max-w-3xl mx-auto opacity-90">
-            Legal knowledge is power. Understand the basics before you buy.
-          </p>
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h1 className="font-serif text-5xl mb-4">Know Your Rights. Protect Your Land.</h1>
+          <p className="text-xl opacity-90">Legal knowledge is freedom</p>
         </div>
       </section>
 
       {/* Land Ownership Basics */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-6">
-          <h2 className="font-serif text-4xl text-forest text-center mb-12">Land Ownership Basics</h2>
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {ownershipBasics.map((item, idx) => (
-              <div key={idx} className="border-2 border-forest rounded-lg p-6">
-                <h3 className="font-serif text-2xl text-forest mb-3">{item.title}</h3>
-                <p className="text-bark">{item.desc}</p>
-              </div>
-            ))}
-          </div>
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <h2 className="font-serif text-4xl text-forest mb-8 text-center">Land Ownership Basics</h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          {deedTypes.map((type, idx) => (
+            <div key={idx} className="bg-white border-2 border-forest rounded-lg p-6">
+              <h3 className="font-serif text-xl text-forest mb-3">{type.name}</h3>
+              <p className="text-gray-700">{type.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Community Legal Structure */}
-      <section className="py-16 bg-gold bg-opacity-10">
-        <div className="container mx-auto px-6">
-          <h2 className="font-serif text-4xl text-forest text-center mb-12">Uni-Phi Legal Structure</h2>
-          <div className="max-w-4xl mx-auto bg-white border-2 border-forest rounded-lg p-8">
-            <div className="space-y-6 text-bark">
-              <p className="text-lg">
-                <strong className="text-forest">How It Works:</strong> Uni-Phi Media LLC operates as a hybrid LLC and land trust. 
-                This structure protects members while maintaining flexibility.
-              </p>
-              <div className="border-l-4 border-forest pl-6">
-                <p className="mb-4">
-                  <strong className="text-forest">Community Lots:</strong> Members hold secure long-term lease rights, not deeds. 
-                  This reduces costs, simplifies transfers, and keeps land in the trust for future generations.
-                </p>
-                <p>
-                  <strong className="text-forest">No-Com-Land Parcels:</strong> Sold via traditional fee-simple deed. 
-                  You own it outright—no HOA, no restrictions, just your land.
-                </p>
-              </div>
-              <p className="text-sm italic">
-                Legal documents available to members in the member portal. All agreements reviewed by licensed attorneys.
-              </p>
-            </div>
-          </div>
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <h2 className="font-serif text-4xl text-forest mb-8 text-center">Uni-Phi Legal Structure</h2>
+        <div className="bg-gold text-white rounded-lg p-8">
+          <p className="text-lg leading-relaxed mb-4">
+            Uni-Phi operates as an <strong>LLC/land trust hybrid</strong>. The LLC owns the land, and members hold lease rights to specific lots or access to common areas.
+          </p>
+          <p className="text-lg leading-relaxed mb-4">
+            <strong>Community lots:</strong> Members receive long-term lease agreements (up to 99 years), not deeds. This keeps land affordable and prevents speculation.
+          </p>
+          <p className="text-lg leading-relaxed">
+            <strong>No-Com-Land parcels:</strong> Fee-simple deeds available for purchase. You own the land outright, with minimal community obligations.
+          </p>
         </div>
       </section>
 
-      {/* Member Rights */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-6">
-          <h2 className="font-serif text-4xl text-forest text-center mb-12">Your Rights as a Member</h2>
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-cream border-2 border-forest rounded-lg p-8">
-              <ul className="space-y-4">
-                {memberRights.map((right, idx) => (
-                  <li key={idx} className="flex items-start text-bark">
-                    <span className="text-gold text-2xl mr-4 flex-shrink-0">✓</span>
-                    <span className="text-lg">{right}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+      {/* Your Rights as a Member */}
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <h2 className="font-serif text-4xl text-forest mb-8 text-center">Your Rights as a Member</h2>
+        <div className="bg-white border-2 border-bark rounded-lg p-8">
+          <ul className="space-y-4">
+            {memberRights.map((right, idx) => (
+              <li key={idx} className="flex items-start">
+                <span className="text-gold text-2xl mr-3">✓</span>
+                <span className="text-gray-700 text-lg">{right}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
       {/* Common Legal Questions */}
-      <section className="py-16">
-        <div className="container mx-auto px-6">
-          <h2 className="font-serif text-4xl text-forest text-center mb-12">Common Legal Questions</h2>
-          <div className="max-w-4xl mx-auto space-y-4">
-            {questions.map((item, idx) => (
-              <div key={idx} className="bg-white border-2 border-forest rounded-lg overflow-hidden">
-                <div className="bg-forest text-cream p-4">
-                  <h3 className="font-serif text-xl">{item.q}</h3>
-                </div>
-                <div className="p-6">
-                  <p className="text-bark">{item.a}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <h2 className="font-serif text-4xl text-forest mb-8 text-center">Common Legal Questions</h2>
+        <div className="space-y-4">
+          {faqs.map((faq, idx) => (
+            <div key={idx} className="bg-white border-2 border-forest rounded-lg p-6">
+              <h3 className="font-serif text-xl text-forest mb-3">{faq.q}</h3>
+              <p className="text-gray-700">{faq.a}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Disclaimer */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-red-50 border-l-4 border-red-600 p-6 rounded">
-              <p className="text-red-900 font-semibold text-lg mb-2">⚠️ Legal Disclaimer</p>
-              <p className="text-red-800">
-                This information is provided for educational purposes only and does not constitute legal advice. 
-                Laws vary by state and county. Always consult a licensed attorney in your jurisdiction before making 
-                land purchases or legal decisions.
-              </p>
-            </div>
-          </div>
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <div className="bg-red-600 text-white border-4 border-red-700 rounded-lg p-8">
+          <h3 className="font-serif text-2xl mb-4">⚠️ Legal Disclaimer</h3>
+          <p className="text-lg leading-relaxed">
+            This is educational content, not legal advice. Laws vary by state and county. Always consult a licensed attorney in your jurisdiction before making property or legal decisions.
+          </p>
         </div>
       </section>
 
       {/* External Resources */}
-      <section className="py-16 bg-forest text-cream">
-        <div className="container mx-auto px-6">
-          <h2 className="font-serif text-4xl text-center mb-12">Legal Resources</h2>
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {resources.map((resource, idx) => (
-              <a
-                key={idx}
-                href={resource.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white bg-opacity-10 border-2 border-cream rounded-lg p-6 hover:bg-opacity-20 transition"
-              >
-                <h3 className="font-serif text-2xl mb-3">{resource.name}</h3>
-                <p className="opacity-90">{resource.desc}</p>
+      <section className="max-w-6xl mx-auto px-6 py-16">
+        <h2 className="font-serif text-4xl text-forest mb-8 text-center">External Resources</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {resources.map((resource, idx) => (
+            <div key={idx} className="bg-bark text-white rounded-lg p-6">
+              <h3 className="font-serif text-xl mb-2">{resource.name}</h3>
+              <p className="text-sm opacity-90 mb-3">{resource.description}</p>
+              <a href={`https://${resource.url}`} className="text-gold hover:underline">
+                {resource.url}
               </a>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
-    </div>
+    </main>
   );
 }
