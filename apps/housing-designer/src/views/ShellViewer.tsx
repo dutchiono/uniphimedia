@@ -4,6 +4,7 @@ import { getRoomModule } from '@uniphimedia/room-modules'
 import * as BABYLON from '@babylonjs/core'
 import '@babylonjs/loaders'
 import { buildRoomShellBabylon, disposeRoomShell, GRID_TO_M } from '../geometry/buildRoomShellBabylon'
+import { applyPBRMaterials, isExteriorFace } from '../renderer/PBRMaterialManager'
 
 // System node colors for overlay spheres
 const NODE_COLORS: Record<string, string> = {
@@ -17,9 +18,11 @@ export default function ShellViewer() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<BABYLON.Engine | null>(null)
   const sceneRef  = useRef<BABYLON.Scene | null>(null)
-  // meshMapRef now holds an array of meshes per room (walls + floor + roof)
+  // meshMapRef holds an array of meshes per room (walls + floor + roof)
   const meshMapRef = useRef<Map<string, BABYLON.Mesh[]>>(new Map())
   const overlayMapRef = useRef<Map<string, BABYLON.Mesh[]>>(new Map())
+  // Shared PBR material cache -- keyed by catalog matId
+  const matCacheRef = useRef<Map<string, BABYLON.PBRMetallicRoughnessMaterial>>(new Map())
 
   const {
     rooms, levels, globalMaterials,
@@ -29,7 +32,7 @@ export default function ShellViewer() {
 
   const [ready, setReady] = useState(false)
 
-  // -- Init Babylon -------------------------------------------------------------
+  // -- Init Babylon ------------------------------------------------------------
   useEffect(() => {
     const canvas = canvasRef.current!
     const engine = new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true })
@@ -54,11 +57,21 @@ export default function ShellViewer() {
     dir.intensity = 0.8
     dir.position = new BABYLON.Vector3(20, 40, 20)
 
-    // Ground grid
+    // Ground
     const ground = BABYLON.MeshBuilder.CreateGround('ground', { width: 60, height: 60 }, scene)
     const gMat = new BABYLON.StandardMaterial('gMat', scene)
     gMat.diffuseColor = new BABYLON.Color3(0.92, 0.92, 0.94)
+    gMat.wireframe = false
     ground.material = gMat
+
+    // Grid lines overlay (optional -- BABYLON.GridMaterial requires materials package)
+    const gridMat = new BABYLON.GridMaterial?.('gridMat', scene)
+    if (gridMat) {
+      gridMat.mainColor = new BABYLON.Color3(0.85, 0.85, 0.88)
+      gridMat.lineColor = new BABYLON.Color3(0.75, 0.75, 0.78)
+      gridMat.gridRatio = GRID_TO_M * 2
+      ground.material = gridMat
+    }
 
     engine.runRenderLoop(() => scene.render())
     window.addEventListener('resize', () => engine.resize())
@@ -75,9 +88,10 @@ export default function ShellViewer() {
     const scene = sceneRef.current
     if (!scene || !ready) return
 
+    const matCache = matCacheRef.current
     const currentIds = new Set(rooms.map(r => r.id))
 
-    // Remove geometry for deleted rooms
+    // Dispose shell meshes for rooms that were removed
     for (const [id, meshes] of meshMapRef.current) {
       if (!currentIds.has(id)) {
         disposeRoomShell(meshes)
@@ -87,71 +101,131 @@ export default function ShellViewer() {
       }
     }
 
+    // Highest occupied level receives 'roof' material slot
+    const maxLevel = rooms.length > 0 ? Math.max(...rooms.map(r => r.level)) : 0
+
     for (const room of rooms) {
       const mod = getRoomModule(room.moduleType)
       const level = levels.find(l => l.index === room.level)
 
-      // Handle level visibility
+      // Hide geometry when level is toggled off
       if (!level?.visible) {
         meshMapRef.current.get(room.id)?.forEach(m => m.setEnabled(false))
         overlayMapRef.current.get(room.id)?.forEach(m => m.setEnabled(false))
         continue
       }
 
+      const isTopLevel = room.level === maxLevel
       const floorY = level.floorHeightMeters
-      const w = room.gridW * GRID_TO_M
-      const d = room.gridH * GRID_TO_M
 
-      // Always rebuild shell geometry when room changes
-      const existing = meshMapRef.current.get(room.id)
-      if (existing) {
-        disposeRoomShell(existing)
+      // Always rebuild so geometry stays in sync with position/size/connector changes.
+      // disposeRoomShell disposes meshes + their StandardMaterials.
+      const existingMeshes = meshMapRef.current.get(room.id)
+      if (existingMeshes) {
+        disposeRoomShell(existingMeshes)
         meshMapRef.current.delete(room.id)
       }
 
-      // Build real architectural shell: 4 walls + floor + roof
-      const meshes = buildRoomShellBabylon(
-        room,
-        mod,
-        floorY,
-        mod.color,
-        scene,
-      )
+      // Build thick-wall architectural shell:
+      // Returns [wall_s, wall_n, wall_w, wall_e, floor, roof] in world space.
+      // Each wall has door/window CSG cutouts from mod.connectors.
+      const shellMeshes = buildRoomShellBabylon(room, mod, floorY, mod.color, scene)
 
-      // Apply room rotation around room centre in XZ plane
-      const cx = room.gridX * GRID_TO_M + w / 2
-      const cz = room.gridY * GRID_TO_M + d / 2
-      const rotRad = (room.rotation * Math.PI) / 180
-      if (rotRad !== 0) {
-        for (const m of meshes) {
+      // Apply room rotation around the SW-corner origin when non-zero
+      if (room.rotation !== 0) {
+        const ox = room.gridX * GRID_TO_M
+        const oz = room.gridY * GRID_TO_M
+        const angle = (room.rotation * Math.PI) / 180
+        for (const m of shellMeshes) {
           m.unfreezeWorldMatrix()
-          const relX = m.position.x - cx
-          const relZ = m.position.z - cz
-          m.position.x = cx + relX * Math.cos(rotRad) - relZ * Math.sin(rotRad)
-          m.position.z = cz + relX * Math.sin(rotRad) + relZ * Math.cos(rotRad)
-          m.rotation.y += rotRad
+          const dx = m.position.x - ox
+          const dz = m.position.z - oz
+          m.position.x = ox + dx * Math.cos(angle) - dz * Math.sin(angle)
+          m.position.z = oz + dx * Math.sin(angle) + dz * Math.cos(angle)
+          m.rotation.y += angle
           m.freezeWorldMatrix()
         }
       }
 
-      meshes.forEach(m => m.setEnabled(true))
-      meshMapRef.current.set(room.id, meshes)
+      // Apply PBR materials per individual mesh.
+      // buildRoomShellBabylon names meshes: wall_s_<id>, wall_n_<id>,
+      // wall_w_<id>, wall_e_<id>, floor_<id>, roof_<id>.
+      // We resolve the material slot from the mesh name prefix, look up the
+      // catalog matId, then apply via PBRMaterialManager.
+      if (globalMaterials && Object.keys(globalMaterials).length > 0) {
+        for (const m of shellMeshes) {
+          const meshName = m.name
+          let slot: string | null = null
+
+          if (meshName.startsWith('wall_s_')) {
+            slot = isExteriorFace(room, 's', rooms) ? 'exterior' : 'wall_s'
+          } else if (meshName.startsWith('wall_n_')) {
+            slot = isExteriorFace(room, 'n', rooms) ? 'exterior' : 'wall_n'
+          } else if (meshName.startsWith('wall_e_')) {
+            slot = isExteriorFace(room, 'e', rooms) ? 'exterior' : 'wall_e'
+          } else if (meshName.startsWith('wall_w_')) {
+            slot = isExteriorFace(room, 'w', rooms) ? 'exterior' : 'wall_w'
+          } else if (meshName.startsWith('floor_')) {
+            slot = 'floor'
+          } else if (meshName.startsWith('roof_')) {
+            slot = isTopLevel ? 'roof' : 'ceiling'
+          }
+
+          if (!slot) continue
+
+          // Room-level override takes priority over global catalog assignment
+          const matId: string | undefined =
+            (room.materialSlots as Record<string, string> | undefined)?.[slot] ??
+            (globalMaterials as Record<string, string>)[slot]
+
+          if (!matId) continue
+
+          if (matCache.has(matId)) {
+            // Reuse already-built PBR material from cache
+            m.material = matCache.get(matId)!
+          } else {
+            // applyPBRMaterials builds the PBRMetallicRoughnessMaterial,
+            // adds it to matCache, and assigns it to m.material.
+            // Pass single-slot map so it targets only this mesh face.
+            applyPBRMaterials(
+              m,
+              room,
+              { [slot]: matId } as Record<string, string>,
+              isTopLevel,
+              rooms,
+              scene,
+              matCache,
+            )
+          }
+        }
+      }
+      // When globalMaterials is empty, the tinted StandardMaterial from
+      // buildRoomShellBabylon (mod.color) serves as the visible fallback.
+
+      shellMeshes.forEach(m => m.setEnabled(true))
+      meshMapRef.current.set(room.id, shellMeshes)
 
       // Systems overlay spheres
-      overlayMapRef.current.get(room.id)?.forEach(m => m.dispose())
+      const existingOverlay = overlayMapRef.current.get(room.id) ?? []
+      existingOverlay.forEach(m => m.dispose())
       const spheres: BABYLON.Mesh[] = []
 
       if (showSystemsOverlay) {
         const wx = room.gridX * GRID_TO_M
         const wz = room.gridY * GRID_TO_M
+
         for (const node of mod.systemNodes) {
-          const s = BABYLON.MeshBuilder.CreateSphere(`node-${room.id}-${node.id}`, { diameter: 0.25 }, scene)
+          const s = BABYLON.MeshBuilder.CreateSphere(
+            'node-' + room.id + '-' + node.id,
+            { diameter: 0.25 },
+            scene,
+          )
           s.position = new BABYLON.Vector3(
             wx + node.positionLocal.x,
             floorY + node.positionLocal.z,
             wz + node.positionLocal.y,
           )
-          const sMat = new BABYLON.StandardMaterial(`smat-${node.id}`, scene)
+          const sMat = new BABYLON.StandardMaterial('smat-' + node.id, scene)
           const hex2 = (NODE_COLORS[node.kind] ?? '#9CA3AF').replace('#', '')
           sMat.diffuseColor = new BABYLON.Color3(
             parseInt(hex2.slice(0, 2), 16) / 255,
@@ -165,7 +239,14 @@ export default function ShellViewer() {
       }
       overlayMapRef.current.set(room.id, spheres)
     }
-  }, [rooms, levels, showSystemsOverlay, ready])
+  }, [rooms, levels, globalMaterials, showSystemsOverlay, ready])
+
+  // -- Render ------------------------------------------------------------------
+  const errorRooms = useDesignStore(
+    s => s.validation?.issues
+      .filter(i => i.severity === 'error')
+      .flatMap(i => i.affectedRoomIds) ?? []
+  )
 
   return (
     <div style={{ display: 'flex', height: '100%', flexDirection: 'column', fontFamily: 'Inter, sans-serif' }}>
@@ -230,7 +311,6 @@ export default function ShellViewer() {
             position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
           }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>&#x1F3D7;</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: '#374151' }}>No rooms yet</div>
             <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Add rooms in the Floor Plan view</div>
           </div>
