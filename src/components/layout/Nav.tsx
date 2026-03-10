@@ -1,7 +1,6 @@
-'use client';
-import Link from 'next/link';
-import { useState } from 'react';
-import { Menu, X } from 'lucide-react';
+'use client'
+import { useState } from 'react'
+import Link from 'next/link'
 
 const links = [
   { label: 'Communities', href: '/communities' },
@@ -9,40 +8,48 @@ const links = [
   { label: 'Membership', href: '/membership' },
   { label: 'Workshares', href: '/workshares' },
   { label: 'Media', href: '/media' },
-  { label: 'Forum', href: '/forum' },
-  { label: 'Tours', href: '/tours' },
-];
+  { label: 'Raffle', href: '/raffle' },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+]
 
-export function Nav() {
-  const [open, setOpen] = useState(false);
+export default function Nav() {
+  const [open, setOpen] = useState(false)
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-brand-green/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-        <Link href="/" className="font-heading text-xl font-bold text-brand-green">
+    <header className="sticky top-0 z-50 bg-brand-bark shadow-md">
+      <div className="container-max flex items-center justify-between px-4 py-3 md:px-8">
+        <Link href="/" className="font-heading text-2xl font-bold text-brand-gold tracking-wide">
           Uni-Phi Media
         </Link>
+        {/* Desktop */}
         <nav className="hidden md:flex items-center gap-6">
           {links.map(l => (
-            <Link key={l.href} href={l.href} className="text-sm font-medium text-brand-dark hover:text-brand-green transition-colors">
+            <Link key={l.href} href={l.href} className="text-brand-cream hover:text-brand-gold text-sm font-medium transition-colors">
               {l.label}
             </Link>
           ))}
-          <Link href="/membership" className="btn-primary text-sm">Join Now</Link>
+          <Link href="/membership" className="btn-gold text-sm py-2 px-4">Join Now</Link>
         </nav>
-        <button className="md:hidden" onClick={() => setOpen(!open)}>
-          {open ? <X size={24} /> : <Menu size={24} />}
+        {/* Mobile toggle */}
+        <button onClick={() => setOpen(!open)} className="md:hidden text-brand-cream" aria-label="Menu">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {open
+              ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
+          </svg>
         </button>
       </div>
+      {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-white border-t border-brand-green/10 px-4 pb-4">
+        <div className="md:hidden bg-brand-bark border-t border-brand-stone px-4 pb-4 flex flex-col gap-3">
           {links.map(l => (
-            <Link key={l.href} href={l.href} className="block py-2 text-brand-dark hover:text-brand-green" onClick={() => setOpen(false)}>
+            <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-brand-cream hover:text-brand-gold py-1 font-medium">
               {l.label}
             </Link>
           ))}
-          <Link href="/membership" className="btn-primary block text-center mt-2" onClick={() => setOpen(false)}>Join Now</Link>
+          <Link href="/membership" onClick={() => setOpen(false)} className="btn-gold text-center mt-2">Join Now</Link>
         </div>
       )}
     </header>
-  );
+  )
 }
