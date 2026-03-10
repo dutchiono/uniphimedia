@@ -1,68 +1,110 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-
-export const metadata: Metadata = {
-  title: 'Hillshire Hollows',
-  description: 'Our flagship permaculture community in the Midwest. Hillside packages, hobbit homes, van life spots, and more.',
-};
+import Link from 'next/link'
 
 const packages = [
-  { name: 'Van Life / RV Spot', price: 'TBD', features: ['Full hookups', 'Shared amenities', 'Community access', 'Monthly or annual'] },
-  { name: 'Workshare Spot', price: 'TBD', features: ['Work-trade model', 'Housing included', 'Food from farm', 'Community access'] },
-  { name: 'Hillside Package', price: 'TBD', features: ['Land parcel', 'Build rights', 'Profit sharing', 'Full membership'] },
-  { name: 'Hobbit Home', price: 'TBD', features: ['Turnkey home', 'Land included', 'Lifetime membership', 'Priority features'] },
-  { name: 'Tornado Bunker', price: 'TBD', features: ['Underground shelter', 'Storm-rated', 'Supply storage', 'Community access'] },
-  { name: 'Bitcoin Bundle', price: 'TBD', features: ['Crypto payment', 'Package discount', 'Priority placement', 'Full membership'] },
-];
+  {
+    name: 'Van Life / RV Spot',
+    icon: '🚐',
+    desc: 'Hook-up spot on Hillshire Hollows land. Water, electric, and community access included.',
+    features: ['Electric & water hookup', 'Community amenities', 'Monthly or annual lease', 'Forum access'],
+    price: 'Contact for pricing',
+    href: '/contact',
+  },
+  {
+    name: 'Workshare Lot',
+    icon: '🌱',
+    desc: 'Earn your spot. Work a set number of hours per week in exchange for land use and community membership.',
+    features: ['Dedicated garden plot', 'Community work schedule', 'Housing credit system', 'Skill-sharing network'],
+    price: 'Work-trade based',
+    href: '/workshares',
+  },
+  {
+    name: 'Hillside Package',
+    icon: '⛰️',
+    desc: 'Premium hillside lots with panoramic views. Build your own home or choose from our standard plans.',
+    features: ['Deeded lot', 'Build-ready utilities', 'Community profit-share', 'HOA-free'],
+    price: 'Contact for pricing',
+    href: '/contact',
+    featured: true,
+  },
+  {
+    name: 'Hobbit Home',
+    icon: '🏠',
+    desc: 'Move-in ready earth-integrated hobbit homes. Sustainable, beautiful, and fully off-grid capable.',
+    features: ['Fully built', 'Earth-integrated design', 'Solar-ready', 'Lifetime community membership'],
+    price: 'Contact for pricing',
+    href: '/contact',
+  },
+  {
+    name: 'Tornado Bunker',
+    icon: '🛡️',
+    desc: 'Underground reinforced bunkers — storm shelter, prepper HQ, or long-term off-grid base.',
+    features: ['Reinforced concrete', 'Air filtration system', 'Long-term food storage space', 'Community lot access'],
+    price: 'Contact for pricing',
+    href: '/contact',
+  },
+  {
+    name: 'Bitcoin Bundle',
+    icon: '₿',
+    desc: 'Full land package purchasable in Bitcoin. Includes lot, basic utilities, and lifetime membership.',
+    features: ['Crypto-native purchase', 'Deeded lot included', 'Lifetime membership', 'Priority community access'],
+    price: 'BTC accepted',
+    href: '/contact',
+  },
+]
 
-export default function HillshireHollowsPage() {
+export default function HSHPage() {
   return (
-    <div>
+    <>
       {/* Hero */}
-      <section className="bg-brand-green text-white py-24 text-center">
-        <div className="max-w-4xl mx-auto px-4">
-          <p className="text-brand-gold uppercase tracking-widest text-sm mb-4">Flagship Property</p>
-          <h1 className="font-heading text-5xl md:text-6xl font-bold mb-6">Hillshire Hollows</h1>
-          <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-            Our founding community — a permaculture farmstead in the heart of the Midwest.
-            Multiple housing options for every lifestyle.
+      <section className="bg-brand-green text-white section-pad py-24 text-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/images/hsh-aerial.jpg')] bg-cover bg-center opacity-20" />
+        <div className="relative container-max">
+          <p className="text-brand-gold font-semibold uppercase tracking-widest text-sm mb-4">Flagship Property</p>
+          <h1 className="font-heading text-5xl md:text-6xl font-black mb-6">Hillshire Hollows</h1>
+          <p className="text-white/80 text-xl max-w-2xl mx-auto mb-10">
+            A Midwest off-grid farmstead community — choose your path, plant your roots, and build the life you actually want.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/tours" className="btn-secondary">Book a Tour</Link>
-            <Link href="#packages" className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition-colors">
-              See Packages
-            </Link>
+            <Link href="/tours" className="btn-gold text-lg px-8 py-4">Schedule a Tour</Link>
+            <Link href="/contact" className="btn-outline border-white text-white hover:bg-white hover:text-brand-green text-lg px-8 py-4">Ask a Question</Link>
           </div>
         </div>
       </section>
 
       {/* Packages */}
-      <section id="packages" className="section">
-        <h2 className="font-heading text-4xl font-bold text-center text-brand-green mb-4">
-          Available Packages
-        </h2>
-        <p className="text-center text-gray-600 mb-12">
-          Contact us for current pricing — packages are limited and fill quickly.
-        </p>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {packages.map(pkg => (
-            <div key={pkg.name} className="border border-brand-green/20 rounded-2xl p-6 hover:shadow-lg transition-shadow">
-              <h3 className="font-heading text-xl font-bold text-brand-green mb-2">{pkg.name}</h3>
-              <p className="text-2xl font-bold text-brand-gold mb-4">{pkg.price}</p>
-              <ul className="space-y-2 mb-6">
-                {pkg.features.map(f => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className="text-brand-green">✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/contact" className="btn-primary block text-center text-sm">
-                Get More Info
-              </Link>
-            </div>
-          ))}
+      <section className="bg-brand-cream section-pad">
+        <div className="container-max">
+          <h2 className="font-heading text-4xl font-bold text-brand-green text-center mb-4">Choose Your Package</h2>
+          <p className="text-center text-brand-bark/60 mb-12 max-w-xl mx-auto">Six ways to become part of Hillshire Hollows — from van life hookups to full land ownership in Bitcoin.</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {packages.map(pkg => (
+              <div key={pkg.name} className={`rounded-xl p-8 flex flex-col shadow-sm hover:shadow-md transition-shadow ${pkg.featured ? 'bg-brand-green text-white ring-2 ring-brand-gold' : 'bg-white'}`}>
+                <span className="text-4xl mb-4">{pkg.icon}</span>
+                <h3 className={`font-heading text-2xl font-bold mb-3 ${pkg.featured ? 'text-brand-gold' : 'text-brand-green'}`}>{pkg.name}</h3>
+                <p className={`text-sm mb-4 flex-1 ${pkg.featured ? 'text-white/80' : 'text-brand-bark/70'}`}>{pkg.desc}</p>
+                <ul className="space-y-1 mb-6">
+                  {pkg.features.map(f => (
+                    <li key={f} className={`text-sm flex items-center gap-2 ${pkg.featured ? 'text-white/70' : 'text-brand-bark/60'}`}>
+                      <span className="text-brand-gold">✓</span> {f}
+                    </li>
+                  ))}
+                </ul>
+                <p className={`font-bold text-lg mb-4 ${pkg.featured ? 'text-brand-gold' : 'text-brand-earth'}`}>{pkg.price}</p>
+                <Link href={pkg.href} className={pkg.featured ? 'btn-gold' : 'btn-primary'}>{pkg.featured ? 'Get Started' : 'Learn More'}</Link>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
-    </div>
-  );
+
+      {/* 5 Lakes */}
+      <section className="bg-brand-bark text-white section-pad text-center">
+        <div className="container-max max-w-2xl mx-auto">
+          <h2 className="font-heading text-3xl font-bold text-brand-gold mb-4">5 Lakes — Coming Soon</h2>
+          <p className="text-white/70 mb-8">Our next property. Leave a deposit now to lock in founding member pricing before public launch.</p>
+          <Link href="/contact" className="btn-gold text-lg px-8 py-4">Reserve Your Spot</Link>
+        </div>
+      </section>
+    </>
+  )
 }
