@@ -1,94 +1,78 @@
-// ─── Room Module ─────────────────────────────────────────────────────────────
+/**
+ * @uniphimedia/shared-types
+ *
+ * Shared TypeScript types used across all apps and packages.
+ */
 
-export type ConnectorSide = 'north' | 'south' | 'east' | 'west' | 'floor' | 'ceiling'
-export type ConnectorType = 'wall' | 'corner' | 'stair' | 'exterior'
+// Connector types for room modules
+export type ConnectorType = 'wall' | 'floor' | 'ceiling'
+export type WallSide = 'north' | 'south' | 'east' | 'west'
 
-export interface SnapConnector {
+export interface Connector {
   id: string
-  side: ConnectorSide
-  /** Offset along the wall face, 0–1 normalized */
-  offset: number
   type: ConnectorType
-  /** Whether this connector can accept another room snapping onto it */
-  open: boolean
+  side?: WallSide // only for wall connectors
+  systemNodes: SystemNode[]
 }
 
+// System node types (HVAC, plumbing, electrical)
+export type SystemType = 'hvac' | 'plumbing' | 'electrical'
+
+export interface SystemNode {
+  id: string
+  systemType: SystemType
+  connectorId: string
+  metadata: Record<string, unknown>
+}
+
+// Room module definition
 export interface RoomModule {
   id: string
-  label: string
-  /** Dimensions in meters */
-  width: number
-  depth: number
-  height: number
-  /** All snap connection points on this room */
-  connectors: SnapConnector[]
-  /** Default systems node positions (normalized 0–1 within room volume) */
-  systemsNodes: SystemsNode[]
-  /** Tags for filtering: e.g. ['wet', 'bedroom', 'circulation'] */
-  tags: string[]
+  name: string
+  category: string
+  dimensions: {
+    width: number  // feet
+    depth: number  // feet
+    height: number // feet
+  }
+  connectors: Connector[]
+  defaultSystems: SystemNode[]
 }
 
-// ─── Systems ─────────────────────────────────────────────────────────────────
-
-export type SystemType = 'hvac-supply' | 'hvac-return' | 'hvac-exhaust'
-  | 'plumbing-supply' | 'plumbing-drain' | 'plumbing-vent'
-  | 'electrical-circuit' | 'electrical-panel' | 'electrical-lowvoltage'
-
-export interface SystemsNode {
-  id: string
-  type: SystemType
-  /** Normalized position within room 0–1 on x/y/z */
-  x: number
-  y: number
-  z: number
-  /** Which connector wall this node exits through */
-  exitSide: ConnectorSide
-}
-
-export interface SystemsEdge {
-  fromNodeId: string
-  toNodeId: string
-  resolved: boolean
-  notes?: string
-}
-
-// ─── Materials / Skins ───────────────────────────────────────────────────────
-
-export type FinishCategory =
-  | 'exterior-siding' | 'exterior-roofing' | 'exterior-trim'
-  | 'window' | 'door-exterior' | 'door-interior'
-  | 'flooring' | 'wall-paint' | 'wall-tile' | 'wall-paper' | 'ceiling'
-  | 'baseboard' | 'crown-moulding' | 'door-casing' | 'window-casing'
-  | 'kitchen-cabinet' | 'kitchen-countertop' | 'kitchen-backsplash' | 'kitchen-hardware'
-  | 'bath-vanity' | 'bath-tile' | 'bath-fixture' | 'bath-hardware'
-  | 'lighting-fixture' | 'hvac-register' | 'stair-railing'
-
-export interface FinishCatalogItem {
-  id: string
-  label: string
-  category: FinishCategory
-  /** PBR texture set paths (relative to public/textures/) */
-  albedo?: string
-  normal?: string
-  roughness?: number
-  metallic?: number
-  /** Hex swatch for UI */
-  swatchColor?: string
-  tags: string[]
-}
-
+// Material library types
 export interface MaterialSkin {
   id: string
-  label: string
-  /** Map from category to chosen finish item id */
-  selections: Partial<Record<FinishCategory, string>>
+  name: string
+  category: 'exterior' | 'interior' | 'flooring' | 'roofing' | 'trim' | 'kitchen' | 'bath'
+  subcategory?: string
+  textures: {
+    albedo?: string
+    normal?: string
+    roughness?: string
+    metallic?: string
+  }
+  properties: {
+    color?: string
+    roughness?: number
+    metallic?: number
+  }
 }
 
-// ─── Level ───────────────────────────────────────────────────────────────────
+// Design state (used by housing-designer app)
+export interface PlacedRoom {
+  id: string
+  moduleId: string
+  level: number
+  x: number
+  z: number
+  rotation: 0 | 90 | 180 | 270
+}
 
-export interface Level {
-  index: number
-  label: string
-  /** Floor-to-ceiling height override in meters (default 2.74 = 9ft) */
-  heightOverride?: number
+export interface DesignProject {
+  id: string
+  name: string
+  createdAt: string
+  updatedAt: string
+  rooms: PlacedRoom[]
+  appliedMaterials: Record<string, string> // roomId -> materialId
 }
