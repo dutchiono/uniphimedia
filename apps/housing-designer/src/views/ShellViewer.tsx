@@ -3,6 +3,7 @@ import { useDesignStore } from '../store/useDesignStore'
 import { getRoomModule } from '@uniphimedia/room-modules'
 import * as BABYLON from '@babylonjs/core'
 import '@babylonjs/loaders'
+import { useWalkthroughToggle } from './useWalkthroughToggle'
 
 const GRID_TO_M = 0.5  // 1 grid unit = 0.5 meters
 
@@ -20,6 +21,7 @@ export default function ShellViewer() {
   const sceneRef  = useRef<BABYLON.Scene | null>(null)
   const meshMapRef = useRef<Map<string, BABYLON.Mesh>>(new Map())
   const overlayMapRef = useRef<Map<string, BABYLON.Mesh[]>>(new Map())
+  const orbitCamRef = useRef<BABYLON.ArcRotateCamera | null>(null)
 
   const {
     rooms, levels, globalMaterials,
@@ -28,6 +30,7 @@ export default function ShellViewer() {
   } = useDesignStore()
 
   const [ready, setReady] = useState(false)
+  const { walkthroughActive, toggleWalkthrough } = useWalkthroughToggle()
 
   // ── Init Babylon ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -39,12 +42,13 @@ export default function ShellViewer() {
     sceneRef.current = scene
     scene.clearColor = new BABYLON.Color4(0.96, 0.96, 0.97, 1)
 
-    // Camera
+    // Orbit camera (default)
     const camera = new BABYLON.ArcRotateCamera('cam', -Math.PI / 4, Math.PI / 3.5, 40, BABYLON.Vector3.Zero(), scene)
     camera.attachControl(canvas, true)
     camera.lowerRadiusLimit = 5
     camera.upperRadiusLimit = 200
     camera.wheelDeltaPercentage = 0.01
+    orbitCamRef.current = camera
 
     // Lights
     const hemi = new BABYLON.HemisphericLight('hemi', new BABYLON.Vector3(0, 1, 0), scene)
@@ -80,7 +84,7 @@ export default function ShellViewer() {
     }
   }, [])
 
-  // ── Sync rooms → meshes ───────────────────────────────────────────────────
+  // ── Sync rooms -> meshes ──────────────────────────────────────────────────
   useEffect(() => {
     const scene = sceneRef.current
     if (!scene || !ready) return
@@ -110,18 +114,16 @@ export default function ShellViewer() {
       const d = room.gridH * GRID_TO_M
       const h = room.dims.z
 
-      // World position: center of room, lifted to correct floor height
       const wx = room.gridX * GRID_TO_M + w / 2
       const wz = room.gridY * GRID_TO_M + d / 2
       const wy = level.floorHeightMeters + h / 2
 
-      // Create or update mesh
       let mesh = meshMapRef.current.get(room.id)
       if (!mesh) {
         mesh = BABYLON.MeshBuilder.CreateBox(room.id, { width: w, height: h, depth: d }, scene)
+        mesh.checkCollisions = true  // walls block walkthrough camera
         meshMapRef.current.set(room.id, mesh)
       } else {
-        // Rescale if dimensions changed
         mesh.scaling = new BABYLON.Vector3(
           w / (mesh.getBoundingInfo().boundingBox.extendSize.x * 2),
           h / (mesh.getBoundingInfo().boundingBox.extendSize.y * 2),
@@ -133,7 +135,6 @@ export default function ShellViewer() {
       mesh.rotation.y = (room.rotation * Math.PI) / 180
       mesh.setEnabled(true)
 
-      // Material — use room color from module
       let mat = mesh.material as BABYLON.StandardMaterial
       if (!mat) {
         mat = new BABYLON.StandardMaterial(`mat-${room.id}`, scene)
@@ -159,6 +160,7 @@ export default function ShellViewer() {
             level.floorHeightMeters + node.positionLocal.z,
             wz - d / 2 + node.positionLocal.y,
           )
+          s.checkCollisions = false  // overlay spheres never block camera
           const sMat = new BABYLON.StandardMaterial(`smat-${node.id}`, scene)
           const hex2 = (NODE_COLORS[node.kind] ?? '#9CA3AF').replace('#', '')
           sMat.diffuseColor = new BABYLON.Color3(
@@ -177,6 +179,14 @@ export default function ShellViewer() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   const errorRooms = useDesignStore(s => s.validation?.issues.filter(i => i.severity === 'error').flatMap(i => i.affectedRoomIds) ?? [])
+
+  function handleWalkthroughToggle() {
+    const scene  = sceneRef.current
+    const canvas = canvasRef.current
+    const orbit  = orbitCamRef.current
+    if (!scene || !canvas || !orbit) return
+    toggleWalkthrough(scene, canvas, orbit)
+  }
 
   return (
     <div style={{ display: 'flex', height: '100%', flexDirection: 'column', fontFamily: 'Inter, sans-serif' }}>
@@ -211,11 +221,35 @@ export default function ShellViewer() {
             fontSize: 12, cursor: 'pointer', fontWeight: showSystemsOverlay ? 600 : 400,
           }}
         >Systems {showSystemsOverlay ? 'ON' : 'OFF'}</button>
+
+        <div style={{ width: 1, height: 20, background: '#E5E7EB', margin: '0 4px' }} />
+
+        {/* Walkthrough toggle */}
+        <button
+          onClick={handleWalkthroughToggle}
+          style={{
+            padding: '3px 12px', borderRadius: 6, border: '1px solid #E5E7EB',
+            background: walkthroughActive ? '#EFF6FF' : '#F9FAFB',
+            color: walkthroughActive ? '#2563EB' : '#6B7280',
+            fontSize: 12, cursor: 'pointer', fontWeight: walkthroughActive ? 600 : 400,
+          }}
+        >{walkthroughActive ? 'Exit Walk' : 'Walk'}</button>
       </div>
 
       {/* Canvas */}
       <div style={{ flex: 1, position: 'relative' }}>
         <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', outline: 'none' }} />
+
+        {/* Walkthrough hint overlay */}
+        {walkthroughActive && (
+          <div style={{
+            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+            background: 'rgba(0,0,0,0.55)', color: '#fff', borderRadius: 8,
+            padding: '6px 16px', fontSize: 12, pointerEvents: 'none', whiteSpace: 'nowrap',
+          }}>
+            WASD to move  |  Mouse to look  |  Press ESC to exit walkthrough
+          </div>
+        )}
 
         {/* Systems legend */}
         {showSystemsOverlay && (
