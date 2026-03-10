@@ -1,109 +1,104 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-
-export const metadata: Metadata = {
-  title: 'Membership',
-  description: 'Join Uni-Phi Media. Choose from workshare, retiree, van life, lifetime, and premium membership tiers.',
-};
+import Link from 'next/link'
 
 const tiers = [
   {
     name: 'Workshare',
-    price: 'TBD',
-    description: 'Work-trade model — contribute your skills in exchange for housing, food, and community access.',
-    features: ['Housing provided', 'Meals from farm', 'Community events', 'Skills training', 'Path to full membership'],
-    cta: 'Apply to Workshare',
+    icon: '🌾',
+    desc: 'Work a set schedule in exchange for community access, land use, and skill-building. Perfect for those who want to contribute hands-on.',
+    features: ['Flexible work schedule', 'Land access & garden plot', 'Community housing credit', 'Skills training', 'Forum access'],
+    cta: 'Apply for Workshare',
     href: '/workshares',
-    highlighted: false,
   },
   {
-    name: 'Van Life',
-    price: 'TBD',
-    description: 'Nomad-friendly. Full hookup spots across our properties with full community access.',
-    features: ['Full hookups (water, electric)', 'Community access', 'Monthly or annual', 'Multiple locations', 'Laundry & facilities'],
-    cta: 'Reserve a Spot',
+    name: 'Community',
+    icon: '🏘️',
+    desc: 'Standard membership with full access to community events, forum, media library, and member perks.',
+    features: ['Community events access', 'Member forum', 'Media library', 'Monthly giveaways', 'Discount on tours'],
+    cta: 'Join Now',
     href: '/contact',
-    highlighted: false,
   },
   {
     name: 'Retiree',
-    price: 'TBD',
-    description: 'Purpose-built for retirees seeking community, meaning, and a simpler life.',
-    features: ['Dedicated retiree area', 'Social programming', 'Gentle workshare option', 'Medical proximity', 'Community garden'],
+    icon: '🌅',
+    desc: 'Designed for retirees seeking intentional community living with peace, purpose, and like-minded neighbors.',
+    features: ['Dedicated retiree community', 'On-site social programs', 'Medical resource network', 'Gardening programs', 'Low-stress lifestyle design'],
     cta: 'Learn More',
     href: '/contact',
-    highlighted: false,
+  },
+  {
+    name: 'Van Life',
+    icon: '🚐',
+    desc: 'For the nomads. Hook up at Hillshire Hollows, stay as long as you need, and tap into community resources while on the road.',
+    features: ['Monthly hookup access', 'Electric & water', 'Community WiFi', 'Laundry access', 'Mail handling'],
+    cta: 'Get Hooked Up',
+    href: '/contact',
   },
   {
     name: 'Lifetime',
-    price: 'TBD',
-    description: 'A permanent stake in the community. Land rights, profit sharing, and lifetime access.',
-    features: ['Land parcel included', 'Profit sharing', 'All community access', 'Priority placement', 'Lifetime guarantee'],
-    cta: 'Get Lifetime Access',
+    icon: '♾️',
+    desc: 'One payment, permanent stake. The highest tier — includes profit-sharing, priority land access, and all future perks.',
+    features: ['One-time payment', 'Profit-sharing model', 'Priority property access', 'All future benefits included', 'Founding member status'],
+    cta: 'Become a Lifer',
     href: '/contact',
-    highlighted: true,
+    featured: true,
   },
-  {
-    name: 'Premium',
-    price: 'TBD',
-    description: 'Top-tier access with full benefits, priority features, and leadership opportunities.',
-    features: ['Everything in Lifetime', 'Leadership path', 'Private events', 'First access to new communities', 'Dedicated support'],
-    cta: 'Go Premium',
-    href: '/contact',
-    highlighted: false,
-  },
-];
+]
+
+const clubs = [
+  { name: 'Monthly Seed Club', icon: '🌱', desc: 'Rare and heirloom seeds delivered to your door each month.' },
+  { name: 'Sticker Club', icon: '🎨', desc: 'Exclusive Uni-Phi sticker drops — community art and branding.' },
+  { name: 'Veteran Support Sub', icon: '🎖️', desc: 'Monthly support package for veterans in and around the community.' },
+]
 
 export default function MembershipPage() {
   return (
-    <div>
-      <section className="bg-brand-green text-white py-20 text-center">
-        <div className="max-w-3xl mx-auto px-4">
-          <h1 className="font-heading text-5xl font-bold mb-4">Membership</h1>
-          <p className="text-xl text-white/80">
-            Find the tier that fits your life. Every level gets you access to our 
-            community, land, and media — on your terms.
-          </p>
+    <>
+      <section className="bg-brand-green text-white section-pad py-24 text-center">
+        <div className="container-max">
+          <h1 className="font-heading text-5xl md:text-6xl font-black mb-6">Membership</h1>
+          <p className="text-white/80 text-xl max-w-2xl mx-auto">Five ways to belong — from working the land to holding a lifetime stake. Find the path that fits your life.</p>
         </div>
       </section>
-      <section className="section">
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tiers.map(tier => (
-            <div
-              key={tier.name}
-              className={`rounded-2xl p-8 flex flex-col ${
-                tier.highlighted
-                  ? 'bg-brand-green text-white ring-4 ring-brand-gold'
-                  : 'border border-brand-green/20'
-              }`}
-            >
-              <h3 className={`font-heading text-2xl font-bold mb-2 ${tier.highlighted ? 'text-brand-gold' : 'text-brand-green'}`}>
-                {tier.name}
-              </h3>
-              <p className={`text-sm mb-4 flex-0 ${tier.highlighted ? 'text-white/80' : 'text-gray-500'}`}>
-                {tier.description}
-              </p>
-              <ul className="space-y-2 mb-8 flex-1">
-                {tier.features.map(f => (
-                  <li key={f} className={`flex items-center gap-2 text-sm ${tier.highlighted ? 'text-white/90' : 'text-gray-600'}`}>
-                    <span className={tier.highlighted ? 'text-brand-gold' : 'text-brand-green'}>✓</span> {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={tier.href}
-                className={`block text-center py-3 rounded-lg font-semibold transition-colors ${
-                  tier.highlighted
-                    ? 'bg-brand-gold text-brand-dark hover:bg-brand-gold/90'
-                    : 'btn-primary'
-                }`}
-              >
-                {tier.cta}
-              </Link>
-            </div>
-          ))}
+
+      <section className="bg-brand-cream section-pad">
+        <div className="container-max">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {tiers.map(tier => (
+              <div key={tier.name} className={`rounded-xl p-8 flex flex-col shadow-sm hover:shadow-md transition-shadow ${tier.featured ? 'bg-brand-green text-white ring-2 ring-brand-gold lg:col-span-1' : 'bg-white'}`}>
+                <span className="text-4xl mb-4">{tier.icon}</span>
+                <h3 className={`font-heading text-2xl font-bold mb-3 ${tier.featured ? 'text-brand-gold' : 'text-brand-green'}`}>{tier.name}</h3>
+                <p className={`text-sm mb-5 flex-1 ${tier.featured ? 'text-white/80' : 'text-brand-bark/70'}`}>{tier.desc}</p>
+                <ul className="space-y-1 mb-6">
+                  {tier.features.map(f => (
+                    <li key={f} className={`text-sm flex items-center gap-2 ${tier.featured ? 'text-white/70' : 'text-brand-bark/60'}`}>
+                      <span className="text-brand-gold">✓</span> {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link href={tier.href} className={tier.featured ? 'btn-gold' : 'btn-primary'}>{tier.cta}</Link>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
-    </div>
-  );
+
+      {/* Monthly Clubs */}
+      <section className="bg-white section-pad">
+        <div className="container-max">
+          <h2 className="font-heading text-4xl font-bold text-brand-green text-center mb-4">Monthly Subscription Clubs</h2>
+          <p className="text-center text-brand-bark/60 mb-12 max-w-xl mx-auto">Add-on subscriptions open to all members.</p>
+          <div className="grid md:grid-cols-3 gap-8">
+            {clubs.map(c => (
+              <div key={c.name} className="bg-brand-cream rounded-xl p-8 text-center">
+                <span className="text-5xl mb-4 block">{c.icon}</span>
+                <h3 className="font-heading text-xl font-bold text-brand-green mb-3">{c.name}</h3>
+                <p className="text-brand-bark/70 text-sm mb-6">{c.desc}</p>
+                <Link href="/contact" className="btn-outline">Subscribe</Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  )
 }
