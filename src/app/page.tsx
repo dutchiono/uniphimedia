@@ -18,7 +18,7 @@ const paths = [
   {
     icon: '📡',
     title: 'Watch & Learn',
-    desc: 'Unbiased Midwest news, permaculture education, DIY homesteading videos, and live community streams.',
+    desc: 'Unbiased Midwest news, permaculture education, DIY Farmsteading videos, and live community streams.',
     href: '/media',
     cta: 'Explore Media',
   },

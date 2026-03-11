@@ -28,7 +28,7 @@ export default function BenefitsPage() {
             </div>
             <div className="border-l-4 border-gold pl-4">
               <h3 className="font-semibold text-forest mb-2">Workshops & Education</h3>
-              <p className="text-bark">Monthly skill-building workshops on homesteading, building, and self-sufficiency</p>
+              <p className="text-bark">Monthly skill-building workshops on Farmsteading, building, and self-sufficiency</p>
             </div>
             <div className="border-l-4 border-gold pl-4">
               <h3 className="font-semibold text-forest mb-2">Community Events</h3>
@@ -110,7 +110,7 @@ export default function BenefitsPage() {
             </div>
             <div className="border-l-4 border-gold pl-4">
               <h3 className="font-semibold text-forest mb-2">Tax Strategy Workshops</h3>
-              <p className="text-bark">Educational sessions on farm tax benefits, homestead exemptions, and write-offs</p>
+              <p className="text-bark">Educational sessions on farm tax benefits, Farmstead exemptions, and write-offs</p>
             </div>
           </div>
         </div>

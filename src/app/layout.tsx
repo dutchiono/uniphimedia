@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Nav from '@/components/layout/Nav'
-import Footer from '@/components/layout/Footer'
+import SiteChrome from '@/components/layout/SiteChrome'
 
 export const metadata: Metadata = {
   title: 'Uni-Phi Media | Midwest News & Community Building',
@@ -12,9 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <Nav />
-        <main>{children}</main>
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   )

@@ -5,7 +5,7 @@ export default function MediaPage() {
     { title: "Community Land Basics", category: "Legal", views: "3.8K" },
     { title: "Food Forest Year One", category: "Permaculture", views: "1.9K" },
     { title: "Tiny Home Building Tips", category: "DIY", views: "7.2K" },
-    { title: "Midwest Homestead Tour", category: "Community", views: "4.5K" }
+    { title: "Midwest Farmstead Tour", category: "Community", views: "4.5K" }
   ];
 
   const schedule = [

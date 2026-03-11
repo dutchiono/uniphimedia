@@ -16,7 +16,7 @@ export default function HillsidePackagesPage() {
       highlighted: false
     },
     {
-      name: "Homesteader",
+      name: "Farmsteader",
       price: "$28,000",
       deposit: "$1,000 deposit",
       sqft: "400-600 sq ft",
@@ -70,7 +70,7 @@ export default function HillsidePackagesPage() {
         "5% discount for full BTC payment",
         "Privacy-focused transaction processing",
         "Also accepts XMR, ETH, gold/silver",
-        "Inflation-hedge your homestead",
+        "Inflation-hedge your Farmstead",
         "Financial sovereignty community support"
       ],
       highlighted: false
@@ -84,10 +84,10 @@ export default function HillsidePackagesPage() {
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="font-serif text-5xl md:text-6xl mb-6">Hillshire Hollows Packages</h1>
           <p className="text-xl md:text-2xl mb-4 text-gold">
-            Your Off-Grid Homestead Starts Here
+            Your Off-Grid Farmstead Starts Here
           </p>
           <p className="text-lg max-w-2xl mx-auto">
-            Choose from five carefully crafted packages designed for Midwest homesteaders. 
+            Choose from five carefully crafted packages designed for Midwest Farmsteaders. 
             From starter lots to complete hobbit homes with underground bunkers, we've built 
             a path for every budget and lifestyle.
           </p>
@@ -183,7 +183,7 @@ export default function HillsidePackagesPage() {
       {/* CTA Section */}
       <section className="bg-forest text-cream py-16 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-serif text-4xl mb-6">Ready to Build Your Homestead?</h2>
+          <h2 className="font-serif text-4xl mb-6">Ready to Build Your Farmstead?</h2>
           <p className="text-lg mb-8">
             Schedule a site visit, ask questions, or reserve your package today. 
             Our team is here to help you find the perfect fit.

@@ -3,7 +3,7 @@ export default function ForumIntroductionsPage() {
     {
       name: "Sarah M.",
       location: "Rural Kansas",
-      bio: "I've been homesteading for 5 years and found Uni-Phi through the podcast. I grow heirloom tomatoes and want to connect with others doing the same.",
+      bio: "I've been Farmsteading for 5 years and found Uni-Phi through the podcast. I grow heirloom tomatoes and want to connect with others doing the same.",
       memberSince: "2025",
     },
     {

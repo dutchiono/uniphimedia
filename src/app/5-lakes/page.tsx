@@ -10,7 +10,7 @@ export default function FiveLakesPage() {
           </p>
           <p className="text-lg max-w-2xl mx-auto">
             Reserve your lakefront lot in our newest intentional community. Five spring-fed lakes, 
-            dock access, fishing rights, and cabin-ready building pads await your homestead vision.
+            dock access, fishing rights, and cabin-ready building pads await your Farmstead vision.
           </p>
         </div>
       </section>
@@ -162,7 +162,7 @@ export default function FiveLakesPage() {
       {/* Final CTA */}
       <section className="bg-forest text-cream py-16 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="font-serif text-4xl mb-6">Start Your Lakeside Homestead Journey</h2>
+          <h2 className="font-serif text-4xl mb-6">Start Your Lakeside Farmstead Journey</h2>
           <p className="text-lg mb-8">
             Limited lots available. Deposit holders get first access when sales open this spring.
           </p>

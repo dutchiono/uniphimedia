@@ -49,9 +49,9 @@ export default function ContentMediaPage() {
       description: "How community land models create wealth while maintaining affordability"
     },
     {
-      title: "The Homestead Legal Guide",
+      title: "The Farmstead Legal Guide",
       duration: "39:42",
-      description: "Navigate zoning, permits, and property rights as a homesteader"
+      description: "Navigate zoning, permits, and property rights as a Farmsteader"
     }
   ];
 
@@ -62,7 +62,7 @@ export default function ContentMediaPage() {
       description: "Complete beginner's journey into regenerative land design and systems thinking"
     },
     {
-      title: "Midwest Homesteading",
+      title: "Midwest Farmsteading",
       episodes: "8 episodes",
       description: "Climate-specific strategies for growing food and building resilience in the heartland"
     },

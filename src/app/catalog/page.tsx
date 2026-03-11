@@ -28,7 +28,7 @@ export default function CatalogPage() {
     },
     {
       name: "Legal & Financial",
-      description: "Land ownership, homestead law, off-grid regulations, community structure",
+      description: "Land ownership, Farmstead law, off-grid regulations, community structure",
       count: "28 resources"
     },
     {

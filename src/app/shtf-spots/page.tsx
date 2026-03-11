@@ -128,7 +128,7 @@ export default function SHTFSpotsPage() {
               <span className="text-gold text-2xl mr-4">✓</span>
               <div>
                 <h3 className="font-serif text-xl mb-2">Community Access</h3>
-              <p>Connect with like-minded preppers and homesteaders. Safety in numbers.</p>
+              <p>Connect with like-minded preppers and Farmsteaders. Safety in numbers.</p>
               </div>
             </div>
             <div className="flex items-start">

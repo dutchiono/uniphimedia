@@ -2,7 +2,7 @@ export default function ForumGeneralPage() {
   const threads = [
     { title: "Welcome to the Uni-Phi Forum!", author: "Admin Team", replies: 47, activity: "Today" },
     { title: "What brought you to Uni-Phi?", author: "Sarah M.", replies: 124, activity: "Today" },
-    { title: "Midwest homesteading tips — share yours", author: "Tom W.", replies: 89, activity: "Today" },
+    { title: "Midwest Farmsteading tips — share yours", author: "Tom W.", replies: 89, activity: "Today" },
     { title: "Best permaculture books (running list)", author: "David C.", replies: 56, activity: "Today" },
     { title: "Trading seeds and plant starts", author: "Renee B.", replies: 34, activity: "Today" },
     { title: "Questions about Hillshire Hollows", author: "James T.", replies: 22, activity: "Today" },

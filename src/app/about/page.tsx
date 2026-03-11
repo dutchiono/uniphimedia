@@ -26,7 +26,7 @@ export default function AboutPage() {
             Uni-Phi's mission is to establish farmsteads and communities that serve as havens of healing, resilience, and relaxation. We are reigniting the American dream through self-sustaining, profit-sharing communities that embrace permaculture, sound financial practices, and promote self-reliance and cooperation.
           </p>
           <p className="text-brand-bark/80 text-lg leading-relaxed">
-            We cover unbiased, unscripted Midwest news, run intentional community properties starting with Hillshire Hollows, produce permaculture and homesteading education content, and build real human networks of people who give a damn about their neighbors.
+            We cover unbiased, unscripted Midwest news, run intentional community properties starting with Hillshire Hollows, produce permaculture and Farmsteading education content, and build real human networks of people who give a damn about their neighbors.
           </p>
         </div>
       </section>
