@@ -38,10 +38,16 @@ export default function ModeFrame({ title, description, left, right, toolbar, st
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: '#F1F5F9' }}>
-      <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', background: '#FFFFFF' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Workspace</div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>{title}</div>
-        <div style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>{description}</div>
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E8F0', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Workspace</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A', marginTop: 2 }}>{title}</div>
+          <div style={{ fontSize: 13, color: '#475569', marginTop: 4 }}>{description}</div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <a href="/website" style={{ padding: '6px 10px', borderRadius: 999, border: '1px solid #CBD5E1', fontSize: 12, fontWeight: 700, color: '#0F172A', textDecoration: 'none', background: '#F8FAFC' }}>Website</a>
+          <a href="/builder" style={{ padding: '6px 10px', borderRadius: 999, border: '1px solid #CBD5E1', fontSize: 12, fontWeight: 700, color: '#0F172A', textDecoration: 'none', background: '#F8FAFC' }}>Builder</a>
+        </div>
       </div>
 
       {toolbar && <div style={{ padding: '12px 18px', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC' }}>{toolbar}</div>}

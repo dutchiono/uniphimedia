@@ -176,6 +176,12 @@ export default function Nav() {
           {navItems.map((item) => (
             <NavItemComponent key={item.href + item.label} item={item} />
           ))}
+          <a
+            href="/builder"
+            className="text-[#FAF7F0] hover:text-[#C9A84C] text-sm font-medium transition-colors"
+          >
+            Builder
+          </a>
           <Link
             href="/membership"
             className="bg-[#C9A84C] text-[#2D5016] text-sm font-bold py-2 px-4 rounded hover:bg-[#b8943d] transition-colors"
@@ -233,10 +239,17 @@ export default function Nav() {
               )}
             </div>
           ))}
+          <a
+            href="/builder"
+            onClick={() => setMobileOpen(false)}
+            className="block mt-4 text-center text-[#FAF7F0] border border-[#C9A84C]/40 font-semibold py-2 px-4 rounded hover:text-[#C9A84C] transition-colors"
+          >
+            Builder
+          </a>
           <Link
             href="/membership"
             onClick={() => setMobileOpen(false)}
-            className="block mt-4 bg-[#C9A84C] text-[#2D5016] text-center font-bold py-2 px-4 rounded hover:bg-[#b8943d] transition-colors"
+            className="block mt-3 bg-[#C9A84C] text-[#2D5016] text-center font-bold py-2 px-4 rounded hover:bg-[#b8943d] transition-colors"
           >
             Join Now
           </Link>
