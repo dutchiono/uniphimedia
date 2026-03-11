@@ -34,33 +34,20 @@ const VIEW_ORDER: ViewConfig[] = [
   },
 ]
 
-function pillButton(active: boolean): React.CSSProperties {
-  return {
-    padding: '8px 14px',
-    borderRadius: 999,
-    border: active ? '1px solid #0F172A' : '1px solid #334155',
-    cursor: 'pointer',
-    background: active ? '#F8FAFC' : 'transparent',
-    color: active ? '#0F172A' : '#CBD5E1',
-    fontWeight: 700,
-    fontSize: 13,
-  }
-}
-
-function stepButton(active: boolean): React.CSSProperties {
+function stepChip(active: boolean): React.CSSProperties {
   return {
     display: 'flex',
     alignItems: 'center',
     gap: 10,
     minWidth: 0,
-    padding: '12px 14px',
-    borderRadius: 16,
-    border: active ? '1px solid #2563EB' : '1px solid #D8E0EA',
-    background: active ? '#EFF6FF' : '#FFFFFF',
-    color: '#0F172A',
+    padding: '10px 12px',
+    borderRadius: 12,
+    border: active ? '1px solid #0F172A' : '1px solid #CBD5E1',
+    background: active ? '#0F172A' : '#FFFFFF',
+    color: active ? '#FFFFFF' : '#0F172A',
     cursor: 'pointer',
-    boxShadow: active ? '0 10px 24px rgba(37,99,235,0.12)' : 'none',
-    flex: 1,
+    fontWeight: 700,
+    fontSize: 13,
   }
 }
 
@@ -69,8 +56,8 @@ function actionButton(kind: 'primary' | 'secondary'): React.CSSProperties {
   return {
     padding: '10px 14px',
     borderRadius: 12,
-    border: primary ? '1px solid #2563EB' : '1px solid #CBD5E1',
-    background: primary ? '#2563EB' : '#FFFFFF',
+    border: primary ? '1px solid #0F172A' : '1px solid #CBD5E1',
+    background: primary ? '#0F172A' : '#FFFFFF',
     color: primary ? '#FFFFFF' : '#0F172A',
     cursor: 'pointer',
     fontWeight: 700,
@@ -99,8 +86,8 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#E9EEF5', color: '#0F172A' }}>
-      <header style={{ background: 'linear-gradient(180deg, #0F172A 0%, #162033 100%)', color: '#F8FAFC', borderBottom: '1px solid #1E293B' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 18px' }}>
+      <header style={{ background: '#0F172A', color: '#F8FAFC', borderBottom: '1px solid #1E293B' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px' }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '0.01em' }}>Housing Designer</div>
             <div style={{ fontSize: 12, color: '#94A3B8' }}>Shell-first workflow for domes, rooms, and finish systems</div>
@@ -108,64 +95,40 @@ export default function App() {
 
           <div style={{ flex: 1 }} />
 
-          <nav style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {VIEW_ORDER.map(item => (
-              <button key={item.id} onClick={() => setView(item.id)} style={pillButton(item.id === view)}>
-                {item.label}
-              </button>
-            ))}
-          </nav>
+          <a
+            href="/website"
+            style={{ color: '#E2E8F0', textDecoration: 'none', fontSize: 12, fontWeight: 700, border: '1px solid #334155', padding: '6px 10px', borderRadius: 999 }}
+          >
+            Website
+          </a>
         </div>
       </header>
 
-      <section style={{ padding: '16px 18px 14px', background: '#F8FAFC', borderBottom: '1px solid #D8E0EA' }}>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'stretch' }}>
-          {VIEW_ORDER.map((item, index) => {
-            const active = item.id === view
-            const complete = index < activeIndex
-            return (
-              <button key={item.id} onClick={() => setView(item.id)} style={stepButton(active)}>
-                <div style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: '50%',
-                  background: active ? '#2563EB' : complete ? '#0F766E' : '#E2E8F0',
-                  color: active || complete ? '#FFFFFF' : '#475569',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 12,
-                  fontWeight: 800,
-                  flexShrink: 0,
-                }}>
-                  {complete ? 'OK' : index + 1}
-                </div>
-                <div style={{ minWidth: 0, textAlign: 'left' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{item.eyebrow}</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#0F172A' }}>{item.label}</div>
-                  <div style={{ fontSize: 12, color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.description}</div>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginTop: 14 }}>
-          <div style={{ flex: 1, minWidth: 280 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{current.eyebrow}</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#0F172A' }}>{current.label}</div>
-            <div style={{ fontSize: 13, color: '#475569', marginTop: 2 }}>{current.description}</div>
+      <section style={{ padding: '12px 18px', background: '#F8FAFC', borderBottom: '1px solid #D8E0EA' }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {VIEW_ORDER.map((item, index) => {
+              const active = item.id === view
+              return (
+                <button key={item.id} onClick={() => setView(item.id)} style={stepChip(active)} title={item.description}>
+                  <span style={{ width: 24, height: 24, borderRadius: '50%', background: active ? '#F8FAFC' : '#E2E8F0', color: active ? '#0F172A' : '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800 }}>
+                    {index + 1}
+                  </span>
+                  {item.label}
+                </button>
+              )
+            })}
           </div>
 
+          <div style={{ flex: 1, minWidth: 200 }} />
+
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ padding: '8px 10px', borderRadius: 999, background: '#E2E8F0', color: '#334155', fontSize: 12, fontWeight: 700 }}>
-                {summary.totalRooms} total room{summary.totalRooms === 1 ? '' : 's'}
-              </span>
-              <span style={{ padding: '8px 10px', borderRadius: 999, background: '#E0F2FE', color: '#0C4A6E', fontSize: 12, fontWeight: 700 }}>
-                {summary.activeLevelRooms} on {summary.levelLabel}
-              </span>
-            </div>
+            <span style={{ padding: '8px 10px', borderRadius: 999, background: '#E2E8F0', color: '#334155', fontSize: 12, fontWeight: 700 }}>
+              {summary.totalRooms} total room{summary.totalRooms === 1 ? '' : 's'}
+            </span>
+            <span style={{ padding: '8px 10px', borderRadius: 999, background: '#E0F2FE', color: '#0C4A6E', fontSize: 12, fontWeight: 700 }}>
+              {summary.activeLevelRooms} on {summary.levelLabel}
+            </span>
 
             {previous && (
               <button onClick={() => setView(previous.id)} style={actionButton('secondary')}>
@@ -179,6 +142,12 @@ export default function App() {
             )}
           </div>
         </div>
+
+        <div style={{ marginTop: 10, fontSize: 12, color: '#64748B' }}>
+          <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: 10 }}>{current.eyebrow}</span>
+          <span style={{ marginLeft: 8, fontWeight: 700, color: '#0F172A' }}>{current.label}</span>
+          <span style={{ marginLeft: 10 }}>{current.description}</span>
+        </div>
       </section>
 
       <main style={{ flex: 1, minHeight: 0, padding: 18 }}>
@@ -191,5 +160,3 @@ export default function App() {
     </div>
   )
 }
-
-
