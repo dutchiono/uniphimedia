@@ -1,0 +1,26 @@
+name: Deploy to bushleague.xyz
+
+on:
+  push:
+    branches: ['main']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.UNIPHI_SSH_HOST }}
+          username: ${{ secrets.UNIPHI_SSH_USER }}
+          password: ${{ secrets.UNIPHI_SSH_PASS }}
+          port: ${{ secrets.UNIPHI_SSH_PORT }}
+          script: |
+            set -e
+            cd /var/www/uniphi/repo
+            git pull
+            pnpm install --frozen-lockfile
+            pnpm build
+            pnpm --filter @uniphimedia/housing-designer build
+            rsync -a --delete /var/www/uniphi/repo/apps/housing-designer/dist/ /var/www/uniphi/builder/
+            systemctl restart uniphi-website
