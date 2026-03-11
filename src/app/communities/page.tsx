@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Communities',
+  description: 'Explore active farmsteads and upcoming developments to find the right community fit.',
+}
 
 const communities = [
   {
@@ -15,7 +21,7 @@ const communities = [
     status: 'Coming Soon',
     statusColor: 'bg-yellow-500',
     location: 'Midwest, USA',
-    desc: 'Our next property development. Deposits open now — founding members lock in the best pricing and first choice of lots before public launch.',
+    desc: 'Our next property development. Deposits open now -- founding members lock in the best pricing and first choice of lots before public launch.',
     href: '/contact',
     features: ['Lakefront access', 'Founding member pricing', 'Deposits open now', 'Launch TBD'],
   },
@@ -54,30 +60,42 @@ export default function CommunitiesPage() {
       <section className="bg-brand-green text-white section-pad py-24 text-center">
         <div className="container-max">
           <h1 className="font-heading text-5xl font-black mb-6">Our Communities</h1>
-          <p className="text-white/80 text-xl max-w-2xl mx-auto">From active farmsteads to upcoming developments — find the community that matches where you are in life.</p>
+          <p className="text-white/80 text-xl max-w-2xl mx-auto">
+            From active farmsteads to upcoming developments -- find the community that matches where you are in life.
+          </p>
         </div>
       </section>
 
       <section className="bg-brand-cream section-pad">
         <div className="container-max space-y-8">
-          {communities.map(c => (
-            <div key={c.name} className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row gap-8">
+          {communities.map((c) => (
+            <div
+              key={c.name}
+              className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row gap-8"
+            >
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-4">
                   <span className={`inline-block w-2.5 h-2.5 rounded-full ${c.statusColor}`} />
                   <span className="text-xs font-semibold uppercase tracking-wide text-brand-bark/50">{c.status}</span>
-                  <span className="text-xs text-brand-bark/40">· {c.location}</span>
+                  <span className="text-xs text-brand-bark/40">- {c.location}</span>
                 </div>
                 <h3 className="font-heading text-3xl font-bold text-brand-green mb-3">{c.name}</h3>
                 <p className="text-brand-bark/70 leading-relaxed mb-6">{c.desc}</p>
                 <ul className="flex flex-wrap gap-2">
-                  {c.features.map(f => (
-                    <li key={f} className="bg-brand-cream text-brand-bark text-xs font-medium px-3 py-1 rounded-full border border-brand-stone/20">{f}</li>
+                  {c.features.map((f) => (
+                    <li
+                      key={f}
+                      className="bg-brand-cream text-brand-bark text-xs font-medium px-3 py-1 rounded-full border border-brand-stone/20"
+                    >
+                      {f}
+                    </li>
                   ))}
                 </ul>
               </div>
               <div className="flex items-center md:items-start md:pt-10">
-                <Link href={c.href} className="btn-primary whitespace-nowrap">Learn More</Link>
+                <Link href={c.href} className="btn-primary whitespace-nowrap">
+                  Learn More
+                </Link>
               </div>
             </div>
           ))}
