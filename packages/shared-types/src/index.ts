@@ -1,10 +1,6 @@
-// ─── Primitives ───────────────────────────────────────────────────────────────
-
 export interface Vec2 { x: number; y: number }
 export interface Vec3 { x: number; y: number; z: number }
 export interface BBox2D { x: number; y: number; w: number; h: number }
-
-// ─── Connector ────────────────────────────────────────────────────────────────
 
 export type ConnectorFace = 'north' | 'south' | 'east' | 'west' | 'floor' | 'ceiling'
 export type ConnectorKind = 'door' | 'opening' | 'window' | 'stair' | 'hvac_duct' | 'plumbing_stack' | 'electrical_panel'
@@ -13,13 +9,33 @@ export interface Connector {
   id: string
   face: ConnectorFace
   kind: ConnectorKind
-  offsetFraction: number   // 0..1 along the face edge
+  offsetFraction: number
   widthMeters: number
   heightMeters: number
-  required: boolean        // must be connected for a valid design
+  required: boolean
+  generated?: boolean
+  linkedRoomId?: string
 }
 
-// ─── Systems Nodes ────────────────────────────────────────────────────────────
+export type PartitionKind = 'straight' | 'radial' | 'ring'
+export type PartitionOrientation = 'vertical' | 'horizontal'
+
+export interface InteriorPartition {
+  id: string
+  roomId: string
+  level: number
+  kind: PartitionKind
+  orientation?: PartitionOrientation
+  offsetMeters?: number
+  angleDeg?: number
+  startMeters?: number
+  endMeters?: number
+  radiusMeters?: number
+  sweepDeg?: number
+  thicknessMeters: number
+  heightMeters: number
+  doorWidthMeters: number | null
+}
 
 export type SystemNodeKind =
   | 'hvac_supply' | 'hvac_return' | 'hvac_handler'
@@ -30,11 +46,9 @@ export type SystemNodeKind =
 export interface SystemNode {
   id: string
   kind: SystemNodeKind
-  positionLocal: Vec3   // meters from room origin (0,0,0 = bottom-left-floor corner)
-  load?: number         // amps for electrical, BTU for HVAC, GPM for plumbing
+  positionLocal: Vec3
+  load?: number
 }
-
-// ─── Room Module ──────────────────────────────────────────────────────────────
 
 export type RoomType =
   | 'bedroom' | 'master_bedroom'
@@ -42,24 +56,36 @@ export type RoomType =
   | 'kitchen' | 'living_room' | 'dining_room'
   | 'hallway' | 'stairwell'
   | 'garage' | 'laundry' | 'office' | 'closet'
+  | 'geodesic_dome' | 'geodesic_dome_studio' | 'geodesic_dome_great'
+
+export type RoomFootprint = 'rect' | 'circle'
+export type RoomShellKind = 'rectilinear' | 'dome'
 
 export interface RoomModule {
   type: RoomType
   label: string
-  defaultDims: Vec3         // meters: width(x), depth(y), height(z)
+  defaultDims: Vec3
   minDims: Vec3
   maxDims: Vec3
-  gridW: number             // default grid columns (1 unit = 0.5m)
-  gridH: number             // default grid rows
+  gridW: number
+  gridH: number
   connectors: Connector[]
   systemNodes: SystemNode[]
-  color: string             // hex for floor plan tile
-  icon: string              // emoji or icon key
+  footprint?: RoomFootprint
+  shellKind?: RoomShellKind
+  color: string
+  icon: string
 }
 
-// ─── Placed Room ──────────────────────────────────────────────────────────────
-
 export type Rotation = 0 | 90 | 180 | 270
+
+export type MaterialCategory =
+  | 'exterior_siding' | 'roofing' | 'flooring'
+  | 'interior_wall' | 'trim' | 'kitchen' | 'bathroom'
+
+export type MaterialSlotKey =
+  | 'floor' | 'ceiling' | 'wall_n' | 'wall_s' | 'wall_e' | 'wall_w'
+  | 'exterior' | 'roof' | 'trim' | 'cabinet' | 'countertop' | 'fixture'
 
 export interface PlacedRoom {
   id: string
@@ -68,15 +94,14 @@ export interface PlacedRoom {
   gridY: number
   gridW: number
   gridH: number
-  level: number             // 0 = ground floor, 1 = first floor, etc.
+  level: number
   rotation: Rotation
-  dims: Vec3                // actual meters (may be resized from default)
-  materialSlots: Record<MaterialSlotKey, string | null>   // slotKey -> materialId
+  dims: Vec3
+  connectors: Connector[]
+  materialSlots: Record<MaterialSlotKey, string | null>
   customLabel?: string
   locked: boolean
 }
-
-// ─── Connection ───────────────────────────────────────────────────────────────
 
 export interface RoomConnection {
   id: string
@@ -88,33 +113,21 @@ export interface RoomConnection {
   issues: ValidationIssue[]
 }
 
-// ─── Materials ────────────────────────────────────────────────────────────────
-
-export type MaterialCategory =
-  | 'exterior_siding' | 'roofing' | 'flooring'
-  | 'interior_wall' | 'trim' | 'kitchen' | 'bathroom'
-
-export type MaterialSlotKey =
-  | 'floor' | 'ceiling' | 'wall_n' | 'wall_s' | 'wall_e' | 'wall_w'
-  | 'exterior' | 'roof' | 'trim' | 'cabinet' | 'countertop' | 'fixture'
-
 export interface PBRMaterial {
   id: string
   name: string
   category: MaterialCategory
-  albedo: string            // hex color
-  roughness: number         // 0..1
-  metallic: number          // 0..1
+  albedo: string
+  roughness: number
+  metallic: number
   normalMapUrl?: string
   albedoMapUrl?: string
   roughnessMapUrl?: string
   aoMapUrl?: string
-  tilingMeters: number      // texture repeat per N meters
+  tilingMeters: number
   description: string
   tags: string[]
 }
-
-// ─── Design ───────────────────────────────────────────────────────────────────
 
 export interface DesignLevel {
   index: number
@@ -126,10 +139,11 @@ export interface DesignLevel {
 export interface Design {
   id: string
   name: string
-  createdAt: string         // ISO8601
+  createdAt: string
   updatedAt: string
   levels: DesignLevel[]
   rooms: PlacedRoom[]
+  partitions: InteriorPartition[]
   connections: RoomConnection[]
   globalMaterials: Record<MaterialSlotKey, string | null>
   metadata: {
@@ -139,8 +153,6 @@ export interface Design {
     levelCount: number
   }
 }
-
-// ─── Validation ───────────────────────────────────────────────────────────────
 
 export type ValidationSeverity = 'error' | 'warning' | 'info'
 export type ValidationCode =
@@ -162,8 +174,6 @@ export interface ValidationResult {
   checkedAt: string
 }
 
-// ─── Snap ─────────────────────────────────────────────────────────────────────
-
 export interface SnapCandidate {
   roomId: string
   connectorId: string
@@ -176,11 +186,9 @@ export interface SnapResult {
   matched: boolean
   candidateA: SnapCandidate
   candidateB: SnapCandidate
-  snapDelta: Vec2           // how far to move the dragged room to align
-  score: number             // lower = better fit
+  snapDelta: Vec2
+  score: number
 }
-
-// ─── Sync / Store State ───────────────────────────────────────────────────────
 
 export type SyncStatus = 'idle' | 'pending' | 'syncing' | 'error'
 

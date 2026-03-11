@@ -1,15 +1,13 @@
 import type { PlacedRoom, SnapCandidate, SnapResult, ConnectorFace, Vec2 } from '@uniphimedia/shared-types'
 import { getRoomModule } from '@uniphimedia/room-modules'
 
-const GRID_SIZE = 0.5 // meters per grid unit
-const SNAP_THRESHOLD = 1.2 // grid units
+const GRID_SIZE = 0.5
+const SNAP_THRESHOLD = 1.2
 
-/** Returns the opposite face for pairing */
 export function oppositeFace(face: ConnectorFace): ConnectorFace {
   return { north: 'south', south: 'north', east: 'west', west: 'east', floor: 'ceiling', ceiling: 'floor' }[face] as ConnectorFace
 }
 
-/** World position of a connector on a placed room (2D, ignores z) */
 export function connectorWorldPos(room: PlacedRoom, connectorId: string): Vec2 | null {
   const mod = getRoomModule(room.moduleType)
   const conn = mod.connectors.find(c => c.id === connectorId)
@@ -19,38 +17,52 @@ export function connectorWorldPos(room: PlacedRoom, connectorId: string): Vec2 |
   const y0 = room.gridY * GRID_SIZE
   const w = room.gridW * GRID_SIZE
   const h = room.gridH * GRID_SIZE
+  const circular = mod.footprint === 'circle'
 
-  // Apply rotation to connector position
-  let fx: number, fy: number
+  let fx: number
+  let fy: number
   const off = conn.offsetFraction
   switch (conn.face) {
-    case 'north': fx = x0 + off * w; fy = y0; break
-    case 'south': fx = x0 + off * w; fy = y0 + h; break
-    case 'east':  fx = x0 + w;       fy = y0 + off * h; break
-    case 'west':  fx = x0;           fy = y0 + off * h; break
-    default:      fx = x0 + 0.5 * w; fy = y0 + 0.5 * h; break
+    case 'north':
+      fx = x0 + off * w
+      fy = circular ? y0 + h / 2 - Math.sqrt(Math.max(0, 1 - Math.pow((fx - (x0 + w / 2)) / (w / 2), 2))) * (h / 2) : y0
+      break
+    case 'south':
+      fx = x0 + off * w
+      fy = circular ? y0 + h / 2 + Math.sqrt(Math.max(0, 1 - Math.pow((fx - (x0 + w / 2)) / (w / 2), 2))) * (h / 2) : y0 + h
+      break
+    case 'east':
+      fy = y0 + off * h
+      fx = circular ? x0 + w / 2 + Math.sqrt(Math.max(0, 1 - Math.pow((fy - (y0 + h / 2)) / (h / 2), 2))) * (w / 2) : x0 + w
+      break
+    case 'west':
+      fy = y0 + off * h
+      fx = circular ? x0 + w / 2 - Math.sqrt(Math.max(0, 1 - Math.pow((fy - (y0 + h / 2)) / (h / 2), 2))) * (w / 2) : x0
+      break
+    default:
+      fx = x0 + 0.5 * w
+      fy = y0 + 0.5 * h
+      break
   }
 
-  // Rotate around room center
   const cx = x0 + w / 2
   const cy = y0 + h / 2
   const rad = (room.rotation * Math.PI) / 180
-  const dx = fx - cx, dy = fy - cy
+  const dx = fx - cx
+  const dy = fy - cy
   return {
     x: cx + dx * Math.cos(rad) - dy * Math.sin(rad),
     y: cy + dx * Math.sin(rad) + dy * Math.cos(rad),
   }
 }
 
-/** Rotated face direction */
 function rotatedFace(face: ConnectorFace, rotation: number): ConnectorFace {
   const faces: ConnectorFace[] = ['north', 'east', 'south', 'west']
   const idx = faces.indexOf(face)
-  if (idx === -1) return face // floor/ceiling don't rotate in 2D
+  if (idx === -1) return face
   return faces[(idx + rotation / 90) % 4]
 }
 
-/** Gather all snap candidates from a room */
 export function getRoomCandidates(room: PlacedRoom): SnapCandidate[] {
   const mod = getRoomModule(room.moduleType)
   return mod.connectors
@@ -69,7 +81,6 @@ export function getRoomCandidates(room: PlacedRoom): SnapCandidate[] {
     .filter(Boolean) as SnapCandidate[]
 }
 
-/** Find best snap between a dragged room and all placed rooms */
 export function findSnap(
   draggedRoom: PlacedRoom,
   placedRooms: PlacedRoom[],
@@ -85,9 +96,7 @@ export function findSnap(
 
     for (const ca of dragCandidates) {
       for (const cb of placedCandidates) {
-        // Faces must be opposing
         if (oppositeFace(ca.face) !== cb.face) continue
-        // Kinds must be compatible
         if (!kindsCompatible(ca.kind, cb.kind)) continue
 
         const dx = cb.worldPos.x - ca.worldPos.x
@@ -95,14 +104,13 @@ export function findSnap(
         const dist = Math.sqrt(dx * dx + dy * dy)
         if (dist > threshold) continue
 
-        const score = dist
-        if (!best || score < best.score) {
+        if (!best || dist < best.score) {
           best = {
             matched: true,
             candidateA: ca,
             candidateB: cb,
             snapDelta: { x: dx, y: dy },
-            score,
+            score: dist,
           }
         }
       }

@@ -10,6 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@uniphimedia/materials-library": "workspace:*",
+    "@uniphimedia/room-modules": "workspace:*",
+    "@uniphimedia/shared-types": "workspace:*",
+    "@uniphimedia/systems-engine": "workspace:*",
     "@babylonjs/core": "^6.44.0",
     "@babylonjs/gui": "^6.44.0",
     "@babylonjs/loaders": "^6.44.0",
@@ -17,7 +21,9 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "web-ifc": "^0.0.57",
-    "zustand": "^4.5.0"
+    "zustand": "^4.5.0",
+    "uuid": "^9.0.0",
+    "zundo": "^2.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",

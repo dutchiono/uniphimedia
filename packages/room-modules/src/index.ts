@@ -283,6 +283,71 @@ export const ROOM_MODULES: Record<string, RoomModule> = {
       n('clo-switch-1', 'electrical_switch', 0.15, 1.3, 1.1),
     ],
   },
+
+  geodesic_dome_studio: {
+    type: 'geodesic_dome_studio', label: 'Studio Dome', color: '#A7DCCF', icon: 'dome',
+    defaultDims: { x: 5.0, y: 5.0, z: 2.8 }, minDims: { x: 4.0, y: 4.0, z: 2.4 }, maxDims: { x: 8.0, y: 8.0, z: 4.0 },
+    gridW: 10, gridH: 10,
+    connectors: [
+      c('studio-dome-door-s', 'south', 'door', 0.5, 1.0, 2.1, true),
+      c('studio-dome-win-e', 'east', 'window', 0.45, 1.0, 1.0),
+      c('studio-dome-hvac-ceil', 'ceiling', 'hvac_duct', 0.5, 0.3, 0.3),
+      c('studio-dome-elec-floor', 'floor', 'electrical_panel', 0.15, 0.1, 0.1),
+    ],
+    systemNodes: [
+      n('studio-dome-hvac-s1', 'hvac_supply', 2.5, 4.0, 0.3, 500),
+      n('studio-dome-hvac-r1', 'hvac_return', 2.5, 1.0, 2.2),
+      n('studio-dome-outlet-1', 'electrical_outlet', 0.8, 1.5, 0.4, 20),
+      n('studio-dome-outlet-2', 'electrical_outlet', 4.2, 1.5, 0.4, 20),
+    ],
+    footprint: 'circle',
+    shellKind: 'dome',
+  },
+
+  geodesic_dome: {
+    type: 'geodesic_dome', label: 'Family Dome', color: '#9BD4C7', icon: 'dome',
+    defaultDims: { x: 8.0, y: 8.0, z: 4.0 }, minDims: { x: 4.0, y: 4.0, z: 2.4 }, maxDims: { x: 16.0, y: 16.0, z: 8.0 },
+    gridW: 16, gridH: 16,
+    connectors: [
+      c('dome-door-s', 'south', 'door', 0.5, 1.2, 2.2, true),
+      c('dome-win-e', 'east', 'window', 0.45, 1.4, 1.2),
+      c('dome-win-w', 'west', 'window', 0.55, 1.4, 1.2),
+      c('dome-hvac-ceil', 'ceiling', 'hvac_duct', 0.5, 0.4, 0.4),
+      c('dome-elec-floor', 'floor', 'electrical_panel', 0.15, 0.1, 0.1),
+    ],
+    systemNodes: [
+      n('dome-hvac-s1', 'hvac_supply', 4.0, 6.5, 0.4, 900),
+      n('dome-hvac-r1', 'hvac_return', 4.0, 1.2, 3.3),
+      n('dome-outlet-1', 'electrical_outlet', 1.0, 2.0, 0.4, 20),
+      n('dome-outlet-2', 'electrical_outlet', 7.0, 2.0, 0.4, 20),
+      n('dome-switch-1', 'electrical_switch', 4.0, 7.4, 1.1),
+    ],
+    footprint: 'circle',
+    shellKind: 'dome',
+  },
+
+  geodesic_dome_great: {
+    type: 'geodesic_dome_great', label: 'Great Dome', color: '#86CBB9', icon: 'dome',
+    defaultDims: { x: 12.0, y: 12.0, z: 6.0 }, minDims: { x: 8.0, y: 8.0, z: 4.0 }, maxDims: { x: 20.0, y: 20.0, z: 10.0 },
+    gridW: 24, gridH: 24,
+    connectors: [
+      c('great-dome-door-s', 'south', 'door', 0.5, 1.4, 2.4, true),
+      c('great-dome-door-e', 'east', 'door', 0.5, 1.2, 2.2),
+      c('great-dome-win-w', 'west', 'window', 0.45, 1.8, 1.2),
+      c('great-dome-win-n', 'north', 'window', 0.5, 1.8, 1.2),
+      c('great-dome-hvac-ceil', 'ceiling', 'hvac_duct', 0.5, 0.5, 0.5),
+      c('great-dome-elec-floor', 'floor', 'electrical_panel', 0.12, 0.1, 0.1),
+    ],
+    systemNodes: [
+      n('great-dome-hvac-s1', 'hvac_supply', 6.0, 10.0, 0.4, 1400),
+      n('great-dome-hvac-r1', 'hvac_return', 6.0, 2.0, 4.8),
+      n('great-dome-outlet-1', 'electrical_outlet', 1.2, 2.0, 0.4, 20),
+      n('great-dome-outlet-2', 'electrical_outlet', 10.8, 2.0, 0.4, 20),
+      n('great-dome-switch-1', 'electrical_switch', 6.0, 11.0, 1.1),
+    ],
+    footprint: 'circle',
+    shellKind: 'dome',
+  }
 }
 
 export function getRoomModule(type: string): RoomModule {
@@ -294,3 +359,5 @@ export function getRoomModule(type: string): RoomModule {
 export function getAllRoomTypes(): string[] {
   return Object.keys(ROOM_MODULES)
 }
+
+export { ROOM_GROUPS } from './registry'

@@ -1,76 +1,55 @@
-import type { PlacedRoom, RoomConnection } from '@uniphimedia/shared-types';
-import { getSnapCandidates } from './snap';
-import { getRoomModule } from '@uniphimedia/room-modules';
+import type { PlacedRoom, RoomConnection } from '@uniphimedia/shared-types'
+import { getRoomCandidates, oppositeFace } from './snap'
 
-/**
- * Resolves all connections between all placed rooms.
- * Returns an updated list of PlacedRooms with connections filled in.
- */
-export function resolveConnections(rooms: PlacedRoom[]): PlacedRoom[] {
-  // Clear existing auto-resolved connections
-  const cleared = rooms.map(r => ({ ...r, connections: [] as RoomConnection[] }));
+function kindsCompatible(a: string, b: string): boolean {
+  const compatible: Record<string, string[]> = {
+    door: ['door', 'opening'],
+    opening: ['door', 'opening'],
+    window: ['window'],
+    stair: ['stair'],
+    hvac_duct: ['hvac_duct'],
+    plumbing_stack: ['plumbing_stack'],
+    electrical_panel: ['electrical_panel'],
+  }
+  return compatible[a]?.includes(b) ?? false
+}
 
-  for (let i = 0; i < cleared.length; i++) {
-    for (let j = i + 1; j < cleared.length; j++) {
-      const roomA = cleared[i];
-      const roomB = cleared[j];
-      const candidates = getSnapCandidates(roomA, roomB);
+export function resolveConnections(rooms: PlacedRoom[]): RoomConnection[] {
+  const connections: RoomConnection[] = []
 
-      for (const cand of candidates) {
-        if (cand.distance > 0.5) continue; // Only snap if truly adjacent
+  for (let i = 0; i < rooms.length; i++) {
+    for (let j = i + 1; j < rooms.length; j++) {
+      const roomA = rooms[i]
+      const roomB = rooms[j]
+      if (roomA.level !== roomB.level) continue
 
-        const modA = getRoomModule(roomA.moduleId);
-        const modB = getRoomModule(roomB.moduleId);
-        const connA = modA?.connectors.find(c => c.id === cand.fromConnectorId);
-        const connB = modB?.connectors.find(c => c.id === cand.toConnectorId);
-        if (!connA || !connB) continue;
+      const candidatesA = getRoomCandidates(roomA)
+      const candidatesB = getRoomCandidates(roomB)
 
-        const warnings: string[] = [];
+      for (const ca of candidatesA) {
+        for (const cb of candidatesB) {
+          if (oppositeFace(ca.face) !== cb.face) continue
+          if (!kindsCompatible(ca.kind, cb.kind)) continue
 
-        // Warn: stair connector must align vertically with a stair on the level above
-        if (connA.type === 'stair' || connB.type === 'stair') {
-          if (roomA.level === roomB.level) {
-            warnings.push('Stair connectors should connect rooms on different levels.');
-          }
+          const dx = cb.worldPos.x - ca.worldPos.x
+          const dy = cb.worldPos.y - ca.worldPos.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist > 0.5) continue
+
+          const id = `${roomA.id}:${ca.connectorId}->${roomB.id}:${cb.connectorId}`
+          connections.push({
+            id,
+            roomAId: roomA.id,
+            connectorAId: ca.connectorId,
+            roomBId: roomB.id,
+            connectorBId: cb.connectorId,
+            validated: true,
+            issues: [],
+          })
         }
-
-        // Warn: plumbing drain must ultimately route to exterior or stack
-        const hasPlumbingDrain = connA.systems.includes('plumbing-drain') || connB.systems.includes('plumbing-drain');
-        if (hasPlumbingDrain) {
-          const bothHaveStack = connA.systems.includes('plumbing-vent') && connB.systems.includes('plumbing-vent');
-          if (!bothHaveStack) {
-            warnings.push('Plumbing drain connection missing vent — ensure plumbing-vent is present on one side.');
-          }
-        }
-
-        const conn: RoomConnection = {
-          fromConnectorId: cand.fromConnectorId,
-          toInstanceId: roomB.instanceId,
-          toConnectorId: cand.toConnectorId,
-          valid: cand.compatible && warnings.length === 0,
-          warnings,
-        };
-
-        cleared[i] = {
-          ...cleared[i],
-          connections: [...cleared[i].connections, conn],
-        };
-
-        // Add reverse connection on roomB
-        const reverseConn: RoomConnection = {
-          fromConnectorId: cand.toConnectorId,
-          toInstanceId: roomA.instanceId,
-          toConnectorId: cand.fromConnectorId,
-          valid: conn.valid,
-          warnings: conn.warnings,
-        };
-        cleared[j] = {
-          ...cleared[j],
-          connections: [...cleared[j].connections, reverseConn],
-        };
       }
     }
   }
 
-  return cleared;
+  return connections
 }

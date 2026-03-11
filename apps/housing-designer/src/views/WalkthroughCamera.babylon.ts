@@ -8,7 +8,6 @@ export const FLOOR_HEIGHT = 1.65 // eye level in metres above floor
  */
 export function createWalkthroughCamera(
   scene: BABYLON.Scene,
-  canvas: HTMLCanvasElement,
   startPosition?: BABYLON.Vector3,
 ): BABYLON.UniversalCamera {
   const pos = startPosition ?? new BABYLON.Vector3(0, FLOOR_HEIGHT, 0)
@@ -70,7 +69,7 @@ export function enterWalkthrough(
 
   orbitCamera.detachControl()
 
-  const wCam = createWalkthroughCamera(scene, canvas, startPos)
+  const wCam = createWalkthroughCamera(scene, startPos)
   wCam.attachControl(canvas, true)
   scene.activeCamera = wCam
 
@@ -82,7 +81,7 @@ export function enterWalkthrough(
 
   // Re-attach / detach on pointer-lock change
   const onPLChange = () => {
-    if (document.pointerLockElement === canvas) {
+    if ((document.pointerLockElement as Element | null) === (canvas as unknown as Element)) {
       wCam.attachControl(canvas, true)
     } else {
       wCam.detachControl()

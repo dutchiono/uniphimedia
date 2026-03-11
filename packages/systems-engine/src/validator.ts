@@ -10,16 +10,56 @@ function issue(
   return { code, severity, message, affectedRoomIds: roomIds, affectedConnectorIds: connectorIds }
 }
 
-/** Check rooms don't overlap on the same level */
+function isCircularRoom(room: PlacedRoom): boolean {
+  return getRoomModule(room.moduleType).footprint === 'circle'
+}
+
+function rectsOverlap(a: PlacedRoom, b: PlacedRoom): boolean {
+  const overlapX = a.gridX < b.gridX + b.gridW && a.gridX + a.gridW > b.gridX
+  const overlapY = a.gridY < b.gridY + b.gridH && a.gridY + a.gridH > b.gridY
+  return overlapX && overlapY
+}
+
+function ellipseRectOverlap(ellipse: PlacedRoom, rect: PlacedRoom): boolean {
+  const centerX = ellipse.gridX + ellipse.gridW / 2
+  const centerY = ellipse.gridY + ellipse.gridH / 2
+  const radiusX = ellipse.gridW / 2
+  const radiusY = ellipse.gridH / 2
+  const closestX = Math.max(rect.gridX, Math.min(centerX, rect.gridX + rect.gridW))
+  const closestY = Math.max(rect.gridY, Math.min(centerY, rect.gridY + rect.gridH))
+  const dx = (closestX - centerX) / radiusX
+  const dy = (closestY - centerY) / radiusY
+  return dx * dx + dy * dy < 1
+}
+
+function ellipsesOverlap(a: PlacedRoom, b: PlacedRoom): boolean {
+  const ax = a.gridX + a.gridW / 2
+  const ay = a.gridY + a.gridH / 2
+  const bx = b.gridX + b.gridW / 2
+  const by = b.gridY + b.gridH / 2
+  const rx = a.gridW / 2 + b.gridW / 2
+  const ry = a.gridH / 2 + b.gridH / 2
+  const dx = (ax - bx) / rx
+  const dy = (ay - by) / ry
+  return dx * dx + dy * dy < 1
+}
+
+function roomsOverlap(a: PlacedRoom, b: PlacedRoom): boolean {
+  const aCircular = isCircularRoom(a)
+  const bCircular = isCircularRoom(b)
+
+  if (!aCircular && !bCircular) return rectsOverlap(a, b)
+  if (aCircular && bCircular) return ellipsesOverlap(a, b)
+  return aCircular ? ellipseRectOverlap(a, b) : ellipseRectOverlap(b, a)
+}
+
 function checkOverlaps(rooms: PlacedRoom[]): ValidationIssue[] {
   const issues: ValidationIssue[] = []
   for (let i = 0; i < rooms.length; i++) {
     for (let j = i + 1; j < rooms.length; j++) {
       const a = rooms[i], b = rooms[j]
       if (a.level !== b.level) continue
-      const overlapX = a.gridX < b.gridX + b.gridW && a.gridX + a.gridW > b.gridX
-      const overlapY = a.gridY < b.gridY + b.gridH && a.gridY + a.gridH > b.gridY
-      if (overlapX && overlapY) {
+      if (roomsOverlap(a, b)) {
         issues.push(issue('OVERLAP', 'error',
           `Room "${a.moduleType}" overlaps with "${b.moduleType}" on level ${a.level}`,
           [a.id, b.id]))
@@ -29,7 +69,6 @@ function checkOverlaps(rooms: PlacedRoom[]): ValidationIssue[] {
   return issues
 }
 
-/** Check room meets minimum size */
 function checkMinSizes(rooms: PlacedRoom[]): ValidationIssue[] {
   return rooms.flatMap(r => {
     const mod = getRoomModule(r.moduleType)
@@ -42,14 +81,12 @@ function checkMinSizes(rooms: PlacedRoom[]): ValidationIssue[] {
   })
 }
 
-/** Every level must have at least one egress (exterior door) */
 function checkEgress(rooms: PlacedRoom[], connections: RoomConnection[]): ValidationIssue[] {
   const issues: ValidationIssue[] = []
   const levels = [...new Set(rooms.map(r => r.level))]
   for (const lvl of levels) {
     const levelRooms = rooms.filter(r => r.level === lvl)
     const connectedIds = new Set(connections.flatMap(c => [c.connectorAId, c.connectorBId]))
-    // A room has egress if it has a required door connector that is NOT connected (= goes to exterior)
     const hasEgress = levelRooms.some(r => {
       const mod = getRoomModule(r.moduleType)
       return mod.connectors.some(c => c.kind === 'door' && !connectedIds.has(c.id))
@@ -62,7 +99,6 @@ function checkEgress(rooms: PlacedRoom[], connections: RoomConnection[]): Valida
   return issues
 }
 
-/** Rooms with plumbing must have a vent path */
 function checkPlumbingVents(rooms: PlacedRoom[]): ValidationIssue[] {
   return rooms.flatMap(r => {
     const mod = getRoomModule(r.moduleType)
@@ -76,7 +112,6 @@ function checkPlumbingVents(rooms: PlacedRoom[]): ValidationIssue[] {
   })
 }
 
-/** Check electrical circuit load per level */
 function checkElectricalLoad(rooms: PlacedRoom[]): ValidationIssue[] {
   const issues: ValidationIssue[] = []
   const levels = [...new Set(rooms.map(r => r.level))]
@@ -88,7 +123,7 @@ function checkElectricalLoad(rooms: PlacedRoom[]): ValidationIssue[] {
         .filter(n => n.kind === 'electrical_outlet' || n.kind === 'electrical_switch')
         .reduce((s, n) => s + (n.load ?? 0), 0)
     }, 0)
-    if (totalLoad > 200) { // 200A main panel limit
+    if (totalLoad > 200) {
       issues.push(issue('ELECTRICAL_OVERLOAD', 'warning',
         `Level ${lvl} estimated load ${totalLoad}A exceeds 200A panel capacity`,
         levelRooms.map(r => r.id)))
@@ -97,7 +132,6 @@ function checkElectricalLoad(rooms: PlacedRoom[]): ValidationIssue[] {
   return issues
 }
 
-/** Required connectors must be connected */
 function checkRequiredConnectors(rooms: PlacedRoom[], connections: RoomConnection[]): ValidationIssue[] {
   const connectedSet = new Set(connections.flatMap(c => [c.connectorAId, c.connectorBId]))
   return rooms.flatMap(r => {

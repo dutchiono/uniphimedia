@@ -7,4 +7,5 @@ export const ROOM_GROUPS = {
   living: ['living_room', 'dining_room', 'office'],
   circulation: ['hallway', 'stairwell'],
   utility: ['garage'],
+  round: ['geodesic_dome_studio', 'geodesic_dome', 'geodesic_dome_great'],
 } as const
