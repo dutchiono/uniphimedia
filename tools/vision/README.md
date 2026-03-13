@@ -11,6 +11,7 @@ This folder contains a practical first-pass pipeline for bulk AI room images.
 5. Pass 1 quality filter (keeps strong geometry, rejects noisy line sets)
 6. Converts line-segment JSON into builder-ready candidate Design JSON
 7. Pass 2 geodesic snap (normalizes partitions/doors to dome-friendly increments)
+8. Pass 3 semantic inference (room intent probabilities + suggested module type)
 
 This is not production CAD extraction. It is a triage layer to speed up modeling and layout authoring.
 
@@ -32,6 +33,7 @@ python tools/vision/generate_wireframes.py --in data/vision/hobbit-homes/normali
 python tools/vision/score_geometry_candidates.py --lines data/vision/hobbit-homes/wireframes/lines --out data/vision/hobbit-homes/geometry-pass1 --threshold 0.42
 python tools/vision/convert_lines_to_builder_candidates.py --lines data/vision/hobbit-homes/geometry-pass1/accepted-lines --out data/vision/hobbit-homes/builder-candidates
 python tools/vision/snap_candidates_to_geodesic.py --in data/vision/hobbit-homes/builder-candidates/candidates --out data/vision/hobbit-homes/snapped-candidates
+python tools/vision/infer_semantic_room_labels.py --in data/vision/hobbit-homes/snapped-candidates/candidates --out data/vision/hobbit-homes/semantic-candidates
 ```
 
 ## Quick test mode
@@ -44,6 +46,7 @@ python tools/vision/generate_wireframes.py --in data/vision/hobbit-homes/normali
 python tools/vision/score_geometry_candidates.py --lines data/vision/hobbit-homes/wireframes/lines --out data/vision/hobbit-homes/geometry-pass1 --threshold 0.42 --limit 100
 python tools/vision/convert_lines_to_builder_candidates.py --lines data/vision/hobbit-homes/geometry-pass1/accepted-lines --out data/vision/hobbit-homes/builder-candidates --limit 100
 python tools/vision/snap_candidates_to_geodesic.py --in data/vision/hobbit-homes/builder-candidates/candidates --out data/vision/hobbit-homes/snapped-candidates --limit 100
+python tools/vision/infer_semantic_room_labels.py --in data/vision/hobbit-homes/snapped-candidates/candidates --out data/vision/hobbit-homes/semantic-candidates --limit 100
 ```
 
 ## Output
@@ -58,9 +61,11 @@ python tools/vision/snap_candidates_to_geodesic.py --in data/vision/hobbit-homes
 - `data/vision/hobbit-homes/builder-candidates/candidates/` candidate files with `design` payload
 - `data/vision/hobbit-homes/builder-candidates/index.json` candidate index
 - `data/vision/hobbit-homes/snapped-candidates/candidates/` geodesic-snapped candidates (recommended import source)
+- `data/vision/hobbit-homes/semantic-candidates/candidates/` snapped candidates enriched with semantic probabilities
+- `data/vision/hobbit-homes/semantic-candidates/index.json` suggested module + top semantic label
 
 ## Next stage (recommended)
 
-1. Add semantic tags (room type, dome type, openings, style cluster).
-2. Add confidence-based room-type classification from visuals + topology.
+1. Add stronger semantic models (CLIP embeddings + nearest-neighbor labels) to replace heuristic-only scoring.
+2. Add zone-level segmentation so one image can yield multiple sub-room candidates.
 3. Add a UI import action in builder to open candidate `design` JSON directly.
