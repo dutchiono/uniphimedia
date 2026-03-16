@@ -7,7 +7,7 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      { source: '/', destination: '/website', permanent: false, basePath: false },
+      { source: '/', destination: '/', permanent: false, basePath: false },
       { source: '/Media', destination: '/media', permanent: true },
       { source: '/HQ', destination: '/hq', permanent: true },
       { source: '/Farms', destination: '/farms', permanent: true },
