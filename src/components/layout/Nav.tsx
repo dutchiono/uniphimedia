@@ -3,9 +3,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 const hubLinks = [
-  { label: 'HQ', href: '/HQ' },
-  { label: 'Media', href: '/Media' },
-  { label: 'Farms', href: '/Farms' },
+  { label: 'HQ', href: '/hq' },
+  { label: 'Media', href: '/media' },
+  { label: 'Farms', href: '/farms' },
 ]
 
 const utilityLinks = [

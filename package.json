@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:web": "pnpm dev",
+    "dev:builder": "pnpm --filter @uniphimedia/housing-designer dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
