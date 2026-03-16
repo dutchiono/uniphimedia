@@ -9,14 +9,14 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          green:  '#2D5016',
-          lime:   '#4A7C28',
-          gold:   '#C9A84C',
-          amber:  '#D4A017',
-          earth:  '#8B6914',
-          cream:  '#F5F0E8',
-          bark:   '#3D2B1F',
-          stone:  '#6B5744',
+          green:  '#0F5C4B',
+          lime:   '#1A8A6F',
+          gold:   '#FF6A00',
+          amber:  '#FF8A1F',
+          earth:  '#A44C14',
+          cream:  '#EEF2F5',
+          bark:   '#0B0D12',
+          stone:  '#4B5563',
         },
       },
       fontFamily: {

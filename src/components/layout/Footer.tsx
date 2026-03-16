@@ -6,7 +6,7 @@ const cols = [
     links: [
       { label: 'Hillshire Hollows', href: '/hsh' },
       { label: 'Communities', href: '/communities' },
-      { label: 'Home Types', href: '/home-types' },
+      { label: 'Farmsteads', href: '/farmsteads' },
       { label: 'Tornado Bunkers', href: '/hsh#bunkers' },
       { label: 'Bitcoin Bundles', href: '/hsh#btc' },
       { label: '5 Lakes Deposits', href: '/hsh#5lakes' },
@@ -26,6 +26,8 @@ const cols = [
     heading: 'Media & Learn',
     links: [
       { label: 'Media Hub', href: '/media' },
+      { label: 'News', href: '/media/news' },
+      { label: 'Blogs', href: '/media/blogs' },
       { label: 'Farming & Permaculture', href: '/content-media' },
       { label: 'Food Growing', href: '/food-growing' },
       { label: 'Home Protection', href: '/protection' },

@@ -30,6 +30,8 @@ const hubItems: HubItem[] = [
     href: '/media',
     children: [
       { label: 'Media Home', href: '/media' },
+      { label: 'News', href: '/media/news' },
+      { label: 'Blogs', href: '/media/blogs' },
       { label: 'Content & Media', href: '/content-media' },
       { label: 'Media Teams', href: '/media-teams' },
       { label: 'General Discussion', href: '/forum/general' },

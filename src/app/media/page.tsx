@@ -1,10 +1,11 @@
 import Link from 'next/link'
 
 const mediaRoutes = [
-  { title: 'Media Hub', href: '/media', desc: 'Main content, streams, and media channels.' },
+  { title: 'News', href: '/media/news', desc: 'Official updates and verified public releases.' },
+  { title: 'Blogs', href: '/media/blogs', desc: 'Community-authored posts and field journals.' },
   { title: 'Content & Media', href: '/content-media', desc: 'Editorial tracks, media strategy, and publishing.' },
   { title: 'Media Teams', href: '/media-teams', desc: 'Creator teams and collaboration tracks.' },
-  { title: 'Forum News', href: '/forum/general', desc: 'Community discussions tied to current topics.' },
+  { title: 'Forum', href: '/forum/general', desc: 'Open discussion around active projects and topics.' },
 ]
 
 export default function MediaLandingPage() {
@@ -15,7 +16,7 @@ export default function MediaLandingPage() {
           <p className="text-brand-gold font-semibold uppercase tracking-widest text-xs mb-4">UNI-PHI-MEDIA Direction</p>
           <h1 className="font-heading text-5xl md:text-6xl font-black mb-5">Uni-Phi Media</h1>
           <p className="text-white/80 text-lg max-w-2xl mx-auto">
-            Content, news, and audience channels for community updates and Midwest reporting.
+            Content and publishing infrastructure for real community contributions, reviews, and releases.
           </p>
         </div>
       </section>
