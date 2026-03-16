@@ -1,16 +1,20 @@
 /** @type {import('next').NextConfig} */
+const isProd = process.env.NODE_ENV === 'production'
+const basePath = isProd ? '/website' : ''
+
 const nextConfig = {
-  basePath: '/website',
-  assetPrefix: '/website/',
+  basePath,
+  ...(basePath ? { assetPrefix: `${basePath}/` } : {}),
   images: {
     domains: ['static.wixstatic.com'],
   },
   async redirects() {
+    if (isProd) return []
     return [
-      { source: '/Media', destination: '/media', permanent: true },
-      { source: '/HQ', destination: '/hq', permanent: true },
-      { source: '/Farms', destination: '/farms', permanent: true },
+      { source: '/website', destination: '/', permanent: false },
+      { source: '/website/:path*', destination: '/:path*', permanent: false },
     ]
   },
 }
+
 module.exports = nextConfig
